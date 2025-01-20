@@ -17,6 +17,7 @@
 		<java.version>21</java.version>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
+		<version.jsonwebtoken>0.12.3</version.jsonwebtoken>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -32,6 +33,16 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${version.jsonwebtoken}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${version.jsonwebtoken}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
