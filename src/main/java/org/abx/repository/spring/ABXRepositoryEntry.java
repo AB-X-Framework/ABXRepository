@@ -6,10 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(scanBasePackages = {
         "org.abx.repository.spring",
         "org.abx.repository.controller"})
-public class ABXConsoleEntry {
+public class ABXRepositoryEntry {
 
     public static void main(String[] args) {
-        SpringApplication.run(ABXConsoleEntry.class, args);
+        SpringApplication.run(ABXRepositoryEntry.class, args);
 
     }
 
