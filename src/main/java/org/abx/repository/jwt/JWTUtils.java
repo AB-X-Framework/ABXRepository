@@ -44,13 +44,27 @@ public class JWTUtils {
     }
 
     public static String generateToken(String username,String privateKey) throws Exception {
-        long expirationTime = 3600000; // 1 hour in milliseconds
+        return generateToken(username,privateKey, 60);
+    }
+
+    public static String generateToken(String username,String privateKey,int validSeconds) throws Exception {
+        return generateToken(username,privateKey, 60,"");
+    }
+
+    public static String generateToken(
+            String username,
+            String privateKey,
+            int validSeconds,
+            String content) throws Exception {
+        long expirationTime = validSeconds *1000; // 1 hour in milliseconds
         byte[] decodedKey = Base64.getDecoder().decode(privateKey);
+
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decodedKey);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         PrivateKey key = keyFactory.generatePrivate(keySpec);
         return Jwts.builder()
                 .issuer(username)  // Subject (e.g., username)
+                .subject(content)
                 .issuedAt(new Date()) // Issued at
                 .expiration(new Date(System.currentTimeMillis() + expirationTime)) // Expiration
                 .signWith(key) // Signing algorithm and key
