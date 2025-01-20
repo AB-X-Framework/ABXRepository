@@ -1,6 +1,7 @@
 package org.abx.repository.console;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.abx.repository.jwt.JWTUtils;
 import org.abx.repository.spring.ABXRepositoryEntry;
 import org.junit.jupiter.api.Assertions;
@@ -29,6 +30,17 @@ class ABXRepositoryTest {
 				claims.getIssuer());
 		Assertions.assertEquals(admin,
 				claims.getSubject());
+		 token =  JWTUtils.generateToken(issuer,privateKey,1,
+				admin);
+		 Thread.sleep(2000);
+		 Exception e= null;
+		 try {
+			 claims = jwtUtils.validateToken(token);
+		 }catch (Exception ex){
+			 e = ex;
+		 }
+		 Assertions.assertNotNull(e);
+		 Assertions.assertEquals(e.getClass(), ExpiredJwtException.class);
 	}
 
 }
