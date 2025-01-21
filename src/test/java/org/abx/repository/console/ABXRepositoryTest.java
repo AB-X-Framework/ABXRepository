@@ -35,7 +35,7 @@ class ABXRepositoryTest {
 		 Thread.sleep(2000);
 		 Exception e= null;
 		 try {
-			 claims = jwtUtils.validateToken(token);
+			 jwtUtils.validateToken(token);
 		 }catch (Exception ex){
 			 e = ex;
 		 }

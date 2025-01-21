@@ -19,6 +19,13 @@ public class JWTUtils {
     @Value("${jwt.public}")
     private String publicKey;
 
+    public static String removePemDelimiters(String pemContent) {
+        // Remove any lines starting with -----BEGIN and ending with -----END
+        return pemContent.replaceAll("-----BEGIN [A-Z ]*-----", "")
+                .replaceAll("-----END [A-Z ]*-----", "")
+                .replaceAll("\\s", "");  // Remove all whitespaces (newlines/spaces)
+    }
+
     private PublicKey pKey;
 
     public String getPublicKey() {
@@ -26,7 +33,8 @@ public class JWTUtils {
     }
 
     private void setup() throws Exception {
-        byte[] decodedKey = Base64.getDecoder().decode(publicKey);
+
+        byte[] decodedKey = Base64.getDecoder().decode(removePemDelimiters(publicKey));
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodedKey);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         pKey = keyFactory.generatePublic(keySpec);
@@ -57,7 +65,7 @@ public class JWTUtils {
             int validSeconds,
             String content) throws Exception {
         long expirationTime = validSeconds *1000; // 1 hour in milliseconds
-        byte[] decodedKey = Base64.getDecoder().decode(privateKey);
+        byte[] decodedKey = Base64.getDecoder().decode(removePemDelimiters(privateKey));
 
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decodedKey);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
