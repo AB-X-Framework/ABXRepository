@@ -1,5 +1,6 @@
 name: ABX Repository Workflow
 
+
 on:
   push:
   pull_request:
@@ -24,11 +25,11 @@ jobs:
       - name: Settings
         uses: s4u/maven-settings-action@v2.5.0
         with:
-          servers:servers: '[
+          servers: '[
             {"id": "github-WSArch","configuration": {"httpHeaders": {"property": {"name": "Authorization","value": "Bearer ${{ secrets.GITHUB_TOKEN }}"}}}}
           ]'
 
-            # Step 3: Compile and deploy ABX Console
-      - name: Compile and deploy ABX Console
+            # Step 3: Compile and deploy ABX Repository
+      - name: Compile and deploy ABX Repository
         run: |
           mvn package
