@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = {
+        "org.abx.sec",
         "org.abx.services",
         "org.abx.repository.spring",
         "org.abx.jwt",

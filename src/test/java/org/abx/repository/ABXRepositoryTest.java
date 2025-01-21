@@ -65,9 +65,9 @@ public class ABXRepositoryTest {
 
 	@Test
 	public void reqTest() throws Exception {
-		ServiceRequest req = servicesClient.get("repository", "/heartbeat/demo");
+		ServiceRequest req = servicesClient.get("repository", "/heartbeat/alive");
 		ServiceResponse res = servicesClient.process(req);
-		Assertions.assertEquals("demo", res.asString());
+		Assertions.assertTrue(res.asBoolean());
 		String username = "dummy";
 		List<String> role = List.of("admin");
 		String token = JWTUtils.generateToken(username, privateKey, 60,
