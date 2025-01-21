@@ -4,8 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = {
+        "org.abx.services",
         "org.abx.repository.spring",
-        "org.abx.repository.jwt",
+        "org.abx.jwt",
+        "org.abx.heartbeat",
         "org.abx.repository.controller"})
 public class ABXRepositoryEntry {
 
