@@ -6,10 +6,8 @@ import java.util.Map;
 public class ConfigHolder {
 
     public Map<String, UserRepoConfig> configurations;
-    public Map<String, String> diff;
 
     public ConfigHolder() {
         configurations = new HashMap<>();
-        diff = new HashMap<>();
     }
 }
