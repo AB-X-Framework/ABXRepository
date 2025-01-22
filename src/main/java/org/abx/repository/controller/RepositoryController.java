@@ -78,13 +78,14 @@ public class RepositoryController {
             config.put(username, repoConfig);
             reqs.add(new RepoReq("update", repoConfig));
         }
+        semaphore.release();
         return true;
     }
 
 
 
     @Secured("repository")
-    @RequestMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String,String> status(HttpServletRequest request){
         Map<String,String> result = new HashMap<>();
         for (RepoConfig config : configHolder.get(request.getUserPrincipal().getName()).values()){

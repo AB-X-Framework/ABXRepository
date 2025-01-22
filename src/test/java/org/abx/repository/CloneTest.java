@@ -5,6 +5,7 @@ import org.abx.repository.spring.ABXRepositoryEntry;
 import org.abx.services.ServiceRequest;
 import org.abx.services.ServiceResponse;
 import org.abx.services.ServicesClient;
+import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,7 +33,7 @@ public class CloneTest {
 
     @BeforeAll
     public static void setup() {
-        context= SpringApplication.run(ABXRepositoryEntry.class);
+        context = SpringApplication.run(ABXRepositoryEntry.class);
     }
 
     @Test
@@ -47,6 +48,13 @@ public class CloneTest {
         req.addPart("creds", "{}");
         ServiceResponse resp = servicesClient.process(req);
         Assertions.assertEquals(200, resp.statusCode());
+
+        req = servicesClient.get("repository", "/repository/status");
+        req.jwt(token);
+        resp = servicesClient.process(req);
+        JSONObject r = resp.asJSONObject();
+        System.out.println(r.toString());
+        Assertions.assertNotNull(r.get("repo"));
     }
 
     @AfterAll
