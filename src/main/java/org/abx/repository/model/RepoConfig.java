@@ -15,6 +15,8 @@ public class RepoConfig {
 
     public Set<String> diff;
 
+    public String lastKnownStatus;
+
     public RepoConfig() {
         creds = new HashMap<>();
         diff = new HashSet<>();
