@@ -21,4 +21,6 @@ public class RepoConfig {
         creds = new HashMap<>();
         diff = new HashSet<>();
     }
+
+    public RepoConfig updatedConfig;
 }

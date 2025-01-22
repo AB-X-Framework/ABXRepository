@@ -11,18 +11,16 @@ public interface RepositoryEngine {
     /**
      * Update clone, change branch whatever
      *
-     * @param config
-     * @throws Exception
      */
-    public void update(RepoConfig config) throws Exception;
+    public String update(RepoConfig config);
 
-    public void push(RepoConfig config) throws Exception;
+    public String push(RepoConfig config);
 
-    public void rollbackFile(RepoConfig config, String path) throws Exception;
+    public String rollbackFile(RepoConfig config, String path);
 
-    public void rollback(RepoConfig config) throws Exception;
+    public String rollback(RepoConfig config) ;
 
-    public void commit(RepoConfig config) throws Exception;
+    public String commit(RepoConfig config) ;
 
-    public List<String> diff(RepoConfig config) throws Exception;
+    public List<String> diff(RepoConfig config) t;
 }

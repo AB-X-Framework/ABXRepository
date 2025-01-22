@@ -36,6 +36,13 @@ public class RepositoryProcessor extends Thread {
             case "push":
                 engine.push(config);
                 break;
+            case "replace":
+                config.engine=config.updatedConfig.engine;
+                config.url = config.updatedConfig.url;
+                config.creds = config.updatedConfig.creds;
+                config.lastKnownStatus = "Updating";
+                engine.update(config);
+                break;
         }
     }
 
