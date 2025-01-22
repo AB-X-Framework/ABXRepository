@@ -38,16 +38,25 @@ public class GitRepositoryEngine implements RepositoryEngine {
         git.close();
     }
 
-    public void rollback(RepoConfig config) throws Exception{
+    public void push(RepoConfig config) throws Exception {
+        throw new RuntimeException("push not implemented");
+    }
+
+
+    public void rollback(RepoConfig config) throws Exception {
         throw new RuntimeException("rollback not implemented");
     }
 
-    public void commit(RepoConfig config) throws Exception{
+    public void rollbackFile(RepoConfig config, String file) throws Exception {
+        throw new RuntimeException("rollback not implemented");
+    }
+
+    public void commit(RepoConfig config) throws Exception {
 
         throw new RuntimeException("rollback not implemented");
     }
 
-    public List<String> diff(RepoConfig config) throws Exception{
+    public List<String> diff(RepoConfig config) throws Exception {
 
         throw new RuntimeException("rollback not implemented");
     }
