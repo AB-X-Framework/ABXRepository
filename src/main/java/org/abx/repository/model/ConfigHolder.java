@@ -3,11 +3,13 @@ package org.abx.repository.model;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ConfigurationHolder {
+public class ConfigHolder {
 
     public Map<String, UserRepoConfig> configurations;
+    public Map<String, String> diff;
 
-    public ConfigurationHolder() {
+    public ConfigHolder() {
         configurations = new HashMap<>();
+        diff = new HashMap<>();
     }
 }
