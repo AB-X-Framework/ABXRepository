@@ -2,6 +2,7 @@ package org.abx.repository.controller;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.abx.repository.model.ConfigHolder;
 import org.abx.repository.model.RepoConfig;
 import org.abx.repository.model.RepoReq;
@@ -50,12 +51,12 @@ public class RepositoryController {
 
     @Secured("repository")
     @RequestMapping(value = "/update")
-    public boolean update(@AuthenticationPrincipal User user,
-                       @RequestParam String engine,
-                       @RequestParam String name,
-                       @RequestParam String url,
-                       @RequestParam String creds) throws ServletException, IOException {
-        String username = user.getUsername();
+    public boolean update(HttpServletRequest request,
+                          @RequestParam String engine,
+                          @RequestParam String name,
+                          @RequestParam String url,
+                          @RequestParam String creds) throws ServletException, IOException {
+        String username = request.getUserPrincipal().getName();
         RepoConfig repoConfig = new RepoConfig();
         repoConfig.lastKnownStatus = "Initializing";
         repoConfig.name = name;
@@ -71,10 +72,10 @@ public class RepositoryController {
         }
         UserRepoConfig config = configHolder.get(username);
         if (config.containsKey(repoConfig.name)) {
-            config.get(user.getUsername()).updatedConfig = repoConfig;
+            config.get(username).updatedConfig = repoConfig;
             reqs.add(new RepoReq("replace", repoConfig));
         } else {
-            config.put(user.getUsername(), repoConfig);
+            config.put(username, repoConfig);
             reqs.add(new RepoReq("update", repoConfig));
         }
         return true;
@@ -84,9 +85,9 @@ public class RepositoryController {
 
     @Secured("repository")
     @RequestMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String,String> status(@AuthenticationPrincipal User user){
+    public Map<String,String> status(HttpServletRequest request){
         Map<String,String> result = new HashMap<>();
-        for (RepoConfig config : configHolder.get(user.getUsername()).values()){
+        for (RepoConfig config : configHolder.get(request.getUserPrincipal().getName()).values()){
             result.put(config.name, config.lastKnownStatus);
         }
         return result;

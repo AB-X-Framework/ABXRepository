@@ -22,5 +22,5 @@ public interface RepositoryEngine {
 
     public String commit(RepoConfig config) ;
 
-    public List<String> diff(RepoConfig config) t;
+    public List<String> diff(RepoConfig config);
 }
