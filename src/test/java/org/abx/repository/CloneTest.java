@@ -46,22 +46,35 @@ public class CloneTest {
         String token = JWTUtils.generateToken("dummy", privateKey, 60,
                 List.of("repository"));
 
-       ServiceRequest  req = servicesClient.post("repository", "/repository/update");
+        ServiceRequest req = servicesClient.get("repository", "/repository/status");
+        req.jwt(token);
+        ServiceResponse resp = servicesClient.process(req);
+        JSONObject jsonObject = resp.asJSONObject();
+        System.out.println(jsonObject.toString());
+        Assertions.assertTrue(jsonObject.isEmpty());
+
+        req = servicesClient.get("repository", "/repository/details");
+        req.jwt(token);
+        resp = servicesClient.process(req);
+        JSONArray jsonArray = resp.asJSONArray();
+        Assertions.assertTrue(jsonArray.isEmpty());
+
+        req = servicesClient.post("repository", "/repository/update");
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
         req.addPart("url", "https://github.com/luislara/simplerepo.git");
         req.addPart("creds", "{}");
         req.addPart("branch", "");
-        ServiceResponse resp = servicesClient.process(req);
+        resp = servicesClient.process(req);
         Assertions.assertEquals(200, resp.statusCode());
 
         req = servicesClient.get("repository", "/repository/status");
         req.jwt(token);
         resp = servicesClient.process(req);
-        JSONObject r = resp.asJSONObject();
-        System.out.println(r.toString());
-        Assertions.assertEquals(Initializing, r.getJSONObject("repo").get("status"));
+        jsonObject = resp.asJSONObject();
+        System.out.println(jsonObject.toString());
+        Assertions.assertEquals(Initializing, jsonObject.getJSONObject("repo").get("status"));
 
         boolean working = false;
         String status = null;
@@ -69,9 +82,9 @@ public class CloneTest {
             req = servicesClient.get("repository", "/repository/status");
             req.jwt(token);
             resp = servicesClient.process(req);
-            r = resp.asJSONObject();
-            System.out.println(r.toString());
-            status = r.getJSONObject("repo").getString("status");
+            jsonObject = resp.asJSONObject();
+            System.out.println(jsonObject.toString());
+            status = jsonObject.getJSONObject("repo").getString("status");
             if (status.startsWith(WorkingSince)) {
                 working = true;
                 break;
@@ -83,7 +96,7 @@ public class CloneTest {
         req = servicesClient.get("repository", "/repository/details");
         req.jwt(token);
         resp = servicesClient.process(req);
-        JSONArray jsonArray = resp.asJSONArray();
+         jsonArray = resp.asJSONArray();
         int id = idWithName(jsonArray, "repo");
 
         req = servicesClient.get("repository", "/repository/details?id=" + id);
@@ -92,7 +105,7 @@ public class CloneTest {
         System.out.println(resp.asJSONArray());
 
         String filename = "README.md";
-        String path ="/"+ repositoryName + "/"+filename;
+        String path = "/" + repositoryName + "/" + filename;
         req = servicesClient.get("repository", "/repository/data?path=" +
                 path);
         req.jwt(token);
@@ -107,7 +120,7 @@ public class CloneTest {
         req.addPart("branch", "super");
         req.addPart("creds", "{}");
         req.jwt(token);
-        resp = servicesClient.process(req);
+        servicesClient.process(req);
 
         boolean found = false;
         for (int i = 0; i < 10; ++i) {
@@ -123,8 +136,8 @@ public class CloneTest {
             req = servicesClient.get("repository", "/repository/status");
             req.jwt(token);
             resp = servicesClient.process(req);
-            r = resp.asJSONObject();
-            System.out.println(r.toString());
+            jsonObject = resp.asJSONObject();
+            System.out.println(jsonObject.toString());
             Thread.sleep(1000);
         }
         Assertions.assertTrue(found);
@@ -154,9 +167,9 @@ public class CloneTest {
 
         req = servicesClient.post("repository", "/repository/rollback");
         req.jwt(token);
-        req.addPart("repository",repositoryName);
-        req.addPart("files",new JSONArray().put(filename).toString());
-        resp= servicesClient.process(req);
+        req.addPart("repository", repositoryName);
+        req.addPart("files", new JSONArray().put(filename).toString());
+        resp = servicesClient.process(req);
         System.out.println(resp.asString());
         Assertions.assertTrue(resp.asBoolean());
         boolean zero = false;

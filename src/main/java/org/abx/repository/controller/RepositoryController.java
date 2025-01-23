@@ -166,6 +166,9 @@ public class RepositoryController {
         File workingFolder = new File(dir + "/" + username);
         if (id == null) {
             JSONArray data = new JSONArray();
+            if (!configHolder.containsKey(username)) {
+                return data.toString();
+            }
             for (String repo : configHolder.get(username).keySet()) {
                 data.put(getData(username, repo, new File(workingFolder, repo), "/" + repo, false));
 
