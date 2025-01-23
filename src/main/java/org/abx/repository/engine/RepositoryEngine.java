@@ -27,7 +27,7 @@ public interface RepositoryEngine {
     }
 
     String WorkingSince = "Working. Last update at: ";
-
+    String IssueWithGit ="Issue with Git: ";
     void setDir(String dir);
 
     /**
@@ -39,7 +39,7 @@ public interface RepositoryEngine {
 
     public String rollbackFile(RepoConfig config, String path);
 
-    public List<String> diff(RepoConfig config) throws Exception;
+    public String diff(RepoConfig config) ;
 
     public String reset(RepoConfig config);
 }

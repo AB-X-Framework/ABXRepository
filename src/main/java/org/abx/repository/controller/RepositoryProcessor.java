@@ -5,11 +5,15 @@ import org.abx.repository.engine.RepositoryEngine;
 import org.abx.repository.model.RepoConfig;
 import org.abx.repository.model.RepoReq;
 
+import java.io.File;
+
 public class RepositoryProcessor extends Thread {
+    private final String dir;
     private final RepositoryController controller;
 
     private final GitRepositoryEngine gitEngine;
     public RepositoryProcessor(String dir,RepositoryController controller) {
+        this.dir = dir;
         this.controller = controller;
         gitEngine = new GitRepositoryEngine();
         gitEngine.setDir(dir);
@@ -33,8 +37,8 @@ public class RepositoryProcessor extends Thread {
         RepoConfig config = repoReq.config;
         RepositoryEngine engine = getEngine(config.engine);
         switch (req) {
-            case "rebuild":
-                config.lastKnownStatus = engine.rebuild(config);
+            case "reset":
+                config.lastKnownStatus = engine.reset(config);
                 break;
             case "update":
                 config.lastKnownStatus = engine.update(config);
@@ -48,6 +52,17 @@ public class RepositoryProcessor extends Thread {
                 config.creds = config.updatedConfig.creds;
                 config.lastKnownStatus = "Updating";
                 config.lastKnownStatus =  engine.update(config);
+                break;
+            case "diff":
+                config.lastKnownStatus =  engine.diff(config);
+                break;
+            case "remove":
+                File root = new File(dir + "/" + config.user + "/" + config.name);
+                if (RepositoryEngine.deleteFolder(root)){
+                    controller.dispose(config.user, config.name);
+                }else {
+                    config.lastKnownStatus = "Cannot delete repository.";
+                }
                 break;
         }
     }

@@ -113,21 +113,26 @@ public class GitRepositoryEngine implements RepositoryEngine {
     }
 
     @Override
-    public List<String> diff(RepoConfig config) throws Exception {
-        File root = new File(dir + "/" + config.user + "/" + config.name);
-        Git git = Git.open(root);
-        // Get the DiffCommand instance to compute differences
-        DiffCommand diffCommand = git.diff();
-        // Get all the differences between the working directory and the index (staging area)
-        List<DiffEntry> diffs = diffCommand.call();
-        // Get the list of file paths from the diffs
-        List<String> filePaths = new ArrayList<>();
-        // Loop through the DiffEntry list and extract the file paths
-        for (DiffEntry diffEntry : diffs) {
-            // You can use diffEntry.getNewPath() to get the path of the file in the current version
-            filePaths.add(diffEntry.getNewPath());
+    public String diff(RepoConfig config) {
+        try {
+            File root = new File(dir + "/" + config.user + "/" + config.name);
+            Git git = Git.open(root);
+            // Get the DiffCommand instance to compute differences
+            DiffCommand diffCommand = git.diff();
+            // Get all the differences between the working directory and the index (staging area)
+            List<DiffEntry> diffs = diffCommand.call();
+            // Get the list of file paths from the diffs
+            List<String> filePaths = new ArrayList<>();
+            // Loop through the DiffEntry list and extract the file paths
+            for (DiffEntry diffEntry : diffs) {
+                // You can use diffEntry.getNewPath() to get the path of the file in the current version
+                filePaths.add(diffEntry.getNewPath());
+            }
+            config.diff = filePaths;
+            return WorkingSince + new Date() + ".";
+        } catch (Exception e) {
+            return IssueWithGit + e.getMessage();
         }
-        return filePaths;
     }
 
     private String pull(File repoDir, RepoConfig config) {

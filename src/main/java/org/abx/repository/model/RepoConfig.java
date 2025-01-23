@@ -1,9 +1,6 @@
 package org.abx.repository.model;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class RepoConfig {
     public String user;
@@ -14,13 +11,15 @@ public class RepoConfig {
     public String message;
     public Map<String, String> creds;
 
-    public Set<String> diff;
+    public List<String> diff;
 
     public String lastKnownStatus;
 
+    public boolean valid;
+
     public RepoConfig() {
         creds = new HashMap<>();
-        diff = new HashSet<>();
+        diff = new ArrayList<>();
         message ="push";
     }
 
