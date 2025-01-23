@@ -8,6 +8,7 @@ import org.abx.repository.model.ConfigHolder;
 import org.abx.repository.model.RepoConfig;
 import org.abx.repository.model.RepoReq;
 import org.abx.repository.model.UserRepoConfig;
+import org.abx.util.Pair;
 import org.abx.util.StreamUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -41,7 +42,7 @@ public class RepositoryController {
     private String dir;
 
     private final ConfigHolder configHolder;
-    private final HashMap<Integer, String> files;
+    private final HashMap<Integer, RepositoryFile> files;
     private RepositoryProcessor repositoryProcessor;
 
     public RepositoryController() {
@@ -115,13 +116,13 @@ public class RepositoryController {
         return result;
     }
 
-    private JSONObject getData(File file, String path, boolean inner) {
+    private JSONObject getData(String username, String repository, File file, String path, boolean inner) {
         JSONObject jsonObject = new JSONObject();
         String name = file.getName();
         jsonObject.put("name", name);
         jsonObject.put("path", path);
-        int id = path.hashCode();
-        files.put(id, path);
+        int id = (username + path).hashCode();
+        files.put(id, new RepositoryFile(repository, path));
         jsonObject.put("id", id);
         if (file.isFile()) {
             long size = Math.max(1, file.length() / 1024);
@@ -145,7 +146,7 @@ public class RepositoryController {
                     return f1.getName().compareTo(f2.getName());
                 });
                 for (int i = 0; i < files.length; ++i) {
-                    children.put(getData(files[i], path + "/" + files[i].getName(), false));
+                    children.put(getData(username, repository, files[i], path + "/" + files[i].getName(), false));
                 }
                 if (files.length == 0) {
                     jsonObject.put("state", "closed");
@@ -161,13 +162,23 @@ public class RepositoryController {
     @Secured("repository")
     @GetMapping(path = "/details", produces = "application/json")
     public String details(HttpServletRequest req, @RequestParam(name = "id", required = false) String id) throws Exception {
-        File workingFolder = new File(dir + "/" + req.getUserPrincipal().getName());
+        String username = req.getUserPrincipal().getName();
+        File workingFolder = new File(dir + "/" + username);
         if (id == null) {
-            JSONArray data = getData(workingFolder, "", true).getJSONArray("children");
+            JSONArray data = new JSONArray();
+            for (String repo : configHolder.get(username).keySet()) {
+                data.put(getData(username, repo, new File(workingFolder, repo), "/" + repo, false));
+
+            }
             return data.toString(1);
         } else {
-            String path = files.get(Integer.parseInt(id));
-            return getData(new File(workingFolder, path), path, true).getJSONArray("children").toString(0);
+            RepositoryFile repoFile = files.get(Integer.parseInt(id));
+            //Path not valid
+            if (!configHolder.get(username).containsKey(repoFile.repositoryName)) {
+                return "[]";
+            }
+            String path = repoFile.path;
+            return getData(username, repoFile.repositoryName, new File(workingFolder, path), path, true).getJSONArray("children").toString(0);
         }
     }
 
@@ -257,7 +268,7 @@ public class RepositoryController {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
                 getName()).get(repository);
         repoConfig.lastKnownStatus = "Rolling back";
-        reqs.add(new RepoReq("rollback", repoConfig,files));
+        reqs.add(new RepoReq("rollback", repoConfig, files));
         semaphore.release();
         return true;
     }
