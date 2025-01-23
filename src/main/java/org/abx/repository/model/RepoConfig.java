@@ -13,6 +13,7 @@ public class RepoConfig {
 
     public List<String> diff;
 
+    public String branch;
     public String lastKnownStatus;
 
     public boolean valid;
@@ -21,6 +22,7 @@ public class RepoConfig {
         creds = new HashMap<>();
         diff = new ArrayList<>();
         message ="push";
+        branch = "";
     }
 
     public RepoConfig updatedConfig;

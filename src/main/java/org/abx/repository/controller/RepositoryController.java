@@ -43,6 +43,7 @@ public class RepositoryController {
     private final ConfigHolder configHolder;
     private final HashMap<Integer, String> files;
     private RepositoryProcessor repositoryProcessor;
+
     public RepositoryController() {
         configHolder = new ConfigHolder();
         reqs = new ConcurrentLinkedQueue<>();
@@ -54,7 +55,7 @@ public class RepositoryController {
     @PostConstruct
     public void init() {
         new File(dir).mkdirs();
-        repositoryProcessor=  new RepositoryProcessor(dir, this);
+        repositoryProcessor = new RepositoryProcessor(dir, this);
 
         repositoryProcessor.start();
     }
@@ -81,15 +82,15 @@ public class RepositoryController {
             configHolder.put(username, new UserRepoConfig());
         }
         UserRepoConfig config = configHolder.get(username);
-        if (config.containsKey(repoConfig.name)) {
-            RepoConfig rConfig =   config.get(username);
-            if (!rConfig.valid){
+        if (config.containsKey(name)) {
+            RepoConfig rConfig = config.get(name);
+            if (!rConfig.valid) {
                 return false;
             }
-            rConfig .updatedConfig = repoConfig;
+            rConfig.updatedConfig = repoConfig;
             reqs.add(new RepoReq("replace", repoConfig));
         } else {
-            config.put(username, repoConfig);
+            config.put(name, repoConfig);
             reqs.add(new RepoReq("update", repoConfig));
         }
         semaphore.release();
@@ -99,10 +100,15 @@ public class RepositoryController {
 
     @Secured("repository")
     @RequestMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, String> status(HttpServletRequest request) {
-        Map<String, String> result = new HashMap<>();
-        for (RepoConfig config : configHolder.get(request.getUserPrincipal().getName()).values()) {
-            result.put(config.name, config.lastKnownStatus);
+    public Map<String, Map<String,String>> status(HttpServletRequest request) {
+        UserRepoConfig userConfig = configHolder.get(request.getUserPrincipal().getName());
+        Map<String, Map<String,String>> result = new HashMap<>();
+        if (userConfig == null) {
+            return result;
+        }
+        for (RepoConfig config : userConfig.values()) {
+            result.put(config.name, Map.of("status",config.lastKnownStatus,
+                    "branch",config.branch));
         }
         return result;
     }
@@ -183,15 +189,15 @@ public class RepositoryController {
     @Secured("repository")
     @PostMapping("/upload")
     public boolean upload(HttpServletRequest req,
-                                   @RequestParam("path") String path,
-                                   @RequestParam("file") MultipartFile file) throws IOException {
-        String repository = path.substring(1, path.indexOf('/',1));
+                          @RequestParam("path") String path,
+                          @RequestParam("file") MultipartFile file) throws IOException {
+        String repository = path.substring(1, path.indexOf('/', 1));
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
                 getName()).get(repository);
         if (!repoConfig.valid) {
             return false;
         }
-        repoConfig.lastKnownStatus="Updating";
+        repoConfig.lastKnownStatus = "Updating";
         File workingFile = new File(dir + "/" +
                 req.getUserPrincipal().getName() + path);
         InputStream reqInputStream = file.getInputStream();
@@ -206,12 +212,13 @@ public class RepositoryController {
 
     /**
      * This requests last known diff, but actual diff gets trigger during load
-     * @param req the auth request
+     *
+     * @param req        the auth request
      * @param repository the repository name
      * @return the last know diff
      * @throws Exception Not found
      */
-    @GetMapping(path = "/diff",produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/diff", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> diff(HttpServletRequest req,
                              @RequestParam("repository") String repository) throws Exception {
         return configHolder.get(req.getUserPrincipal().
@@ -219,13 +226,13 @@ public class RepositoryController {
 
     }
 
-    @GetMapping(path = "/remove",produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/remove", produces = MediaType.APPLICATION_JSON_VALUE)
     public boolean remove(HttpServletRequest req,
-                             @RequestParam("repository") String repository) throws Exception {
+                          @RequestParam("repository") String repository) throws Exception {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
                 getName()).get(repository);
-        repoConfig.lastKnownStatus="Deleting";
-        repoConfig.valid=false;
+        repoConfig.lastKnownStatus = "Deleting";
+        repoConfig.valid = false;
         reqs.add(new RepoReq("remove", repoConfig));
         semaphore.release();
         return true;
@@ -233,19 +240,20 @@ public class RepositoryController {
 
     /**
      * Disposes file
+     *
      * @param username
      * @param configname
      */
-    protected void dispose(String username,String configname){
+    protected void dispose(String username, String configname) {
         configHolder.get(username).remove(configname);
     }
 
-    @GetMapping(path = "/reset",produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/reset", produces = MediaType.APPLICATION_JSON_VALUE)
     public boolean reset(HttpServletRequest req,
-                          @RequestParam("repository") String repository) throws Exception {
+                         @RequestParam("repository") String repository) throws Exception {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
                 getName()).remove(repository);
-        repoConfig.lastKnownStatus="Resetting";
+        repoConfig.lastKnownStatus = "Resetting";
         reqs.add(new RepoReq("reset", repoConfig));
         semaphore.release();
         return true;

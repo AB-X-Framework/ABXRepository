@@ -282,5 +282,18 @@ public class GitRepositoryEngine implements RepositoryEngine {
         }
     }
 
+   private String getDefaultBranch(Repository repository) throws IOException {
+        // Resolve HEAD to get the symbolic reference
+        Ref headRef = repository.findRef("HEAD");
 
+        if (headRef != null && headRef.isSymbolic()) {
+            // Get the target of the symbolic reference (the default branch)
+            String target = headRef.getTarget().getName();
+
+            // Return the branch name (e.g., "refs/heads/main" -> "main")
+            return target.substring("refs/heads/".length());
+        }
+
+        return null; // Default branch could not be determined
+    }
 }

@@ -45,7 +45,26 @@ public class CloneTest {
         String repositoryName = "repo";
         String token = JWTUtils.generateToken("dummy", privateKey, 60,
                 List.of("repository"));
-        ServiceRequest req = servicesClient.post("repository", "/repository/update");
+
+        /*ServiceRequest req = servicesClient.post("repository", "/repository/remove");
+        req.jwt(token);
+        req.addPart("repository", repositoryName);
+        boolean working = false;
+        for (int i = 0; i < 10; ++i) {
+            req = servicesClient.get("repository", "/repository/status");
+            req.jwt(token);
+            ServiceResponse resp = servicesClient.process(req);
+            JSONObject r = resp.asJSONObject();
+            System.out.println(r.toString());
+            if (r.isEmpty()) {
+                working = true;
+                break;
+            }
+            Thread.sleep(1000);
+        }
+        Assertions.assertTrue(working);*/
+
+       ServiceRequest  req = servicesClient.post("repository", "/repository/update");
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
@@ -59,7 +78,7 @@ public class CloneTest {
         resp = servicesClient.process(req);
         JSONObject r = resp.asJSONObject();
         System.out.println(r.toString());
-        Assertions.assertEquals(Initializing, r.get("repo"));
+        Assertions.assertEquals(Initializing, r.getJSONObject("repo").get("status"));
 
         boolean working = false;
         String status = null;
@@ -69,7 +88,7 @@ public class CloneTest {
             resp = servicesClient.process(req);
             r = resp.asJSONObject();
             System.out.println(r.toString());
-            status = r.getString("repo");
+            status = r.getJSONObject("repo").getString("status");
             if (status.startsWith(WorkingSince)) {
                 working = true;
                 break;
