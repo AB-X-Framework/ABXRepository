@@ -152,7 +152,26 @@ public class CloneTest {
         }
         Assertions.assertTrue(found);
 
-
+        req = servicesClient.post("repository", "/repository/rollback");
+        req.jwt(token);
+        req.addPart("repository",repositoryName);
+        req.addPart("file",filename);
+        resp= servicesClient.process(req);
+        System.out.println(resp.asString());
+        Assertions.assertTrue(resp.asBoolean());
+        boolean zero = false;
+        for (int i = 0; i < 10; ++i) {
+            req = servicesClient.get("repository", "/repository/diff?repository=repo");
+            req.jwt(token);
+            resp = servicesClient.process(req);
+            jsonArray = resp.asJSONArray();
+            if (jsonArray.isEmpty()) {
+                zero = true;
+                break;
+            }
+            Thread.sleep(1000);
+        }
+        Assertions.assertTrue(zero);
 
 
     }

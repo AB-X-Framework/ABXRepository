@@ -114,7 +114,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
         File root = new File(dir + "/" + config.user + "/" + config.name);
         Git git = null;
         try {
-            Git.open(root);
+            git =Git.open(root);
             // Checkout the file to revert it to its state in HEAD
             git.checkout()
                     .addPath(file)

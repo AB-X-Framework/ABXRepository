@@ -40,6 +40,9 @@ public class RepositoryProcessor extends Thread {
             case "pull":
                 config.lastKnownStatus = engine.pull(config);
                 break;
+            case "rollback":
+                config.lastKnownStatus = engine.rollbackFile(config,repoReq.file);
+                break;
             case "reset":
                 config.lastKnownStatus = engine.reset(config);
                 break;

@@ -102,15 +102,15 @@ public class RepositoryController {
 
     @Secured("repository")
     @RequestMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Map<String,String>> status(HttpServletRequest request) {
+    public Map<String, Map<String, String>> status(HttpServletRequest request) {
         UserRepoConfig userConfig = configHolder.get(request.getUserPrincipal().getName());
-        Map<String, Map<String,String>> result = new HashMap<>();
+        Map<String, Map<String, String>> result = new HashMap<>();
         if (userConfig == null) {
             return result;
         }
         for (RepoConfig config : userConfig.values()) {
-            result.put(config.name, Map.of("status",config.lastKnownStatus,
-                    "branch",config.branch));
+            result.put(config.name, Map.of("status", config.lastKnownStatus,
+                    "branch", config.branch));
         }
         return result;
     }
@@ -228,7 +228,7 @@ public class RepositoryController {
 
     }
 
-    @GetMapping(path = "/remove", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/remove")
     public boolean remove(HttpServletRequest req,
                           @RequestParam("repository") String repository) throws Exception {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
@@ -250,13 +250,14 @@ public class RepositoryController {
         configHolder.get(username).remove(configname);
     }
 
-    @GetMapping(path = "/reset", produces = MediaType.APPLICATION_JSON_VALUE)
-    public boolean reset(HttpServletRequest req,
-                         @RequestParam("repository") String repository) throws Exception {
+    @RequestMapping(path = "/rollback")
+    public boolean rollback(HttpServletRequest req,
+                            @RequestParam String repository,
+                            @RequestParam String file) throws Exception {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
-                getName()).remove(repository);
-        repoConfig.lastKnownStatus = "Resetting";
-        reqs.add(new RepoReq("reset", repoConfig));
+                getName()).get(repository);
+        repoConfig.lastKnownStatus = "Rolling back";
+        reqs.add(new RepoReq("rollback", repoConfig,file));
         semaphore.release();
         return true;
     }
