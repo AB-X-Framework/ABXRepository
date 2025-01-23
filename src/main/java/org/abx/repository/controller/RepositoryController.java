@@ -90,6 +90,7 @@ public class RepositoryController {
             if (!rConfig.valid) {
                 return false;
             }
+            rConfig.lastKnownStatus = Initializing;
             rConfig.updatedConfig = repoConfig;
             reqs.add(new RepoReq("replace", rConfig));
         } else {

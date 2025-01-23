@@ -96,7 +96,7 @@ public class CloneTest {
         req = servicesClient.get("repository", "/repository/details");
         req.jwt(token);
         resp = servicesClient.process(req);
-         jsonArray = resp.asJSONArray();
+        jsonArray = resp.asJSONArray();
         int id = idWithName(jsonArray, "repo");
 
         req = servicesClient.get("repository", "/repository/details?id=" + id);
@@ -187,6 +187,50 @@ public class CloneTest {
         Assertions.assertTrue(zero);
 
 
+        req = servicesClient.post("repository", "/repository/update");
+        req.jwt(token);
+        req.addPart("engine", "git");
+        req.addPart("name", repositoryName);
+        req.addPart("url", "https://github.com/luislara/superrepo.git");
+        req.addPart("creds", "{}");
+        req.addPart("branch", "");
+        resp = servicesClient.process(req);
+        Assertions.assertEquals(200, resp.statusCode());
+        Assertions.assertEquals(Initializing, jsonObject.getJSONObject("repo").get("status"));
+
+        req = servicesClient.get("repository", "/repository/status");
+        req.jwt(token);
+        resp = servicesClient.process(req);
+        jsonObject = resp.asJSONObject();
+        System.out.println(jsonObject.toString());
+        working = false;
+        for (int i = 0; i < 10; ++i) {
+            req = servicesClient.get("repository", "/repository/status");
+            req.jwt(token);
+            resp = servicesClient.process(req);
+            jsonObject = resp.asJSONObject();
+            System.out.println(jsonObject.toString());
+            status = jsonObject.getJSONObject("repo").getString("status");
+            if (status.startsWith(WorkingSince)) {
+                working = true;
+                break;
+            }
+            Thread.sleep(1000);
+        }
+        Assertions.assertTrue(working);
+        found = false;
+        for (int i = 0; i < 10; ++i) {
+            req = servicesClient.get("repository", "/repository/data?path=" +
+                    path);
+            req.jwt(token);
+            resp = servicesClient.process(req);
+            if ("superrepo".equals(resp.asString().trim())) {
+                found = true;
+                break;
+            }
+            Thread.sleep(1000);
+        }
+        Assertions.assertTrue(found);
     }
 
     private int idWithName(JSONArray jsonArray, String name) {
