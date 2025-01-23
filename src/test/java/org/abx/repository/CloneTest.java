@@ -18,6 +18,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import java.util.List;
 
+import static org.abx.repository.controller.RepositoryController.Initializing;
+import static org.abx.repository.engine.RepositoryEngine.WorkingSince;
+
 @SpringBootTest(classes = ABXRepositoryEntry.class)
 public class CloneTest {
     @Autowired
@@ -54,7 +57,24 @@ public class CloneTest {
         resp = servicesClient.process(req);
         JSONObject r = resp.asJSONObject();
         System.out.println(r.toString());
-        Assertions.assertNotNull(r.get("repo"));
+        Assertions.assertEquals(Initializing, r.get("repo"));
+
+        boolean working = false;
+        String status = null;
+        for (int i = 0; i < 10; ++i) {
+            req = servicesClient.get("repository", "/repository/status");
+            req.jwt(token);
+            resp = servicesClient.process(req);
+            r = resp.asJSONObject();
+            System.out.println(r.toString());
+            status= r.getString("repo");
+            if (status.startsWith(WorkingSince)) {
+                working = true;
+                break;
+            }
+            Thread.sleep(1000);
+        }
+        Assertions.assertTrue(working, status);
     }
 
     @AfterAll

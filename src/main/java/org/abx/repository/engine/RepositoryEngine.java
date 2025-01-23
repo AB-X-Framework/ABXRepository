@@ -5,12 +5,12 @@ import org.abx.repository.model.RepoConfig;
 import java.util.List;
 
 public interface RepositoryEngine {
+    public static final String WorkingSince = "Working. Last update at: ";
 
     public void setDir(String dir);
 
     /**
      * Update clone, change branch whatever
-     *
      */
     public String update(RepoConfig config);
 
@@ -18,9 +18,9 @@ public interface RepositoryEngine {
 
     public String rollbackFile(RepoConfig config, String path);
 
-    public String rollback(RepoConfig config) ;
+    public String rollback(RepoConfig config);
 
-    public String commit(RepoConfig config) ;
+    public String commit(RepoConfig config);
 
     public List<String> diff(RepoConfig config);
 }

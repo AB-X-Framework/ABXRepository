@@ -30,6 +30,7 @@ import java.util.concurrent.Semaphore;
 @RequestMapping("/repository")
 public class RepositoryController {
 
+    public static final String Initializing = "Initializing";
     @Value("${repository.dir}")
     private String dir;
     private ConfigHolder configHolder;
@@ -58,7 +59,7 @@ public class RepositoryController {
                           @RequestParam String creds) throws ServletException, IOException {
         String username = request.getUserPrincipal().getName();
         RepoConfig repoConfig = new RepoConfig();
-        repoConfig.lastKnownStatus = "Initializing";
+        repoConfig.lastKnownStatus = Initializing;
         repoConfig.name = name;
         repoConfig.url = url;
         repoConfig.user = username;

@@ -51,7 +51,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
             Git git = cloneCommand.call();
             // Close the repository
             git.close();
-            return "Working. Last update at "+new Date()+".";
+            return WorkingSince+new Date()+".";
         } catch (Exception e) {
             return "Issue with Git: " + e.getMessage();
         }
