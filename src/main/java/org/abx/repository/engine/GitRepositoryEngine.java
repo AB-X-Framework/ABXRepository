@@ -6,10 +6,7 @@ import com.jcraft.jsch.Session;
 import org.abx.repository.model.RepoConfig;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.SshSessionFactory;
-import org.eclipse.jgit.transport.SshTransport;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig;
 import org.eclipse.jgit.util.FS;
@@ -50,22 +47,18 @@ public class GitRepositoryEngine implements RepositoryEngine {
         }
         File dotGit = new File(root, ".git");
         if (!dotGit.exists()) {
-            try {
-                RepositoryEngine.deleteFolder(root.toPath());
-                root.mkdirs();
-            } catch (IOException e) {
+            if (!RepositoryEngine.deleteFolder(root)) {
                 return "Unable to delete folder " + root.getAbsolutePath();
             }
+            root.mkdirs();
             return clone(config);
         }
         String uri = getRemoteUri(root);
         if (!uri.equals(config.url)) {
-            try {
-                RepositoryEngine.deleteFolder(root.toPath());
-                root.mkdirs();
-            } catch (IOException e) {
+            if (!RepositoryEngine.deleteFolder(root)) {
                 return "Unable to delete folder " + root.getAbsolutePath();
             }
+            root.mkdirs();
             return clone(config);
         }
         String configBranch = config.creds.get(Branch);
@@ -204,16 +197,19 @@ public class GitRepositoryEngine implements RepositoryEngine {
     }
 
     public static String getRemoteUri(File repoDir) {
-        try {// Open the repository located at the specified path
+        try {// Open the repository
             Git git = Git.open(repoDir);
             Repository repository = git.getRepository();
-            // Get the remotes from the repository
-            Set<String> remotes = repository.getConfig().getSubsections("remote");
-            if (remotes.isEmpty()) {
-                return "";
+            // Retrieve the remote configuration for the specified remote
+
+            List<RemoteConfig> remoteConfigs = RemoteConfig.getAllRemoteConfigs(repository.getConfig());
+            for (RemoteConfig remoteConfig : remoteConfigs) {
+                // Return the first URL associated with the remote
+                if (!remoteConfig.getURIs().isEmpty()) {
+                    return remoteConfig.getURIs().get(0).toString();
+                }
             }
-            // Return the URI of the first remote (you can modify this if you need to handle multiple remotes)
-            return remotes.iterator().next();
+            return "";
         } catch (Exception e) {
             return "";
         }

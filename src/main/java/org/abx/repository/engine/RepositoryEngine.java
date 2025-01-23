@@ -2,31 +2,33 @@ package org.abx.repository.engine;
 
 import org.abx.repository.model.RepoConfig;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Comparator;
+import java.io.File;
 import java.util.List;
-import java.util.stream.Stream;
 
 public interface RepositoryEngine {
 
-    static void deleteFolder(Path folderPath) throws IOException {
-        try (Stream<Path> paths = Files.walk(folderPath)) {
-            paths.sorted(Comparator.reverseOrder()) // Delete files first, then directories
-                    .forEach(path -> {
-                        try {
-                            Files.delete(path); // Delete each file and directory
-                        } catch (IOException e) {
-                            System.err.println("Error deleting " + path + ": " + e.getMessage());
-                        }
-                    });
+    static boolean deleteFolder(File folder) {
+        // Check if the folder exists
+        if (!folder.exists()) {
+            return true;
         }
+
+        // Delete all files and subdirectories recursively
+        if (folder.isDirectory()) {
+            File[] files = folder.listFiles();
+            if (files != null) { // Check for null to avoid NullPointerException
+                for (File file : files) {
+                    deleteFolder(file); // Recursive call
+                }
+            }
+        }
+        // Delete the folder or file
+        return folder.delete();
     }
 
-    public static final String WorkingSince = "Working. Last update at: ";
+    String WorkingSince = "Working. Last update at: ";
 
-    public void setDir(String dir);
+    void setDir(String dir);
 
     /**
      * Update clone, change branch whatever
