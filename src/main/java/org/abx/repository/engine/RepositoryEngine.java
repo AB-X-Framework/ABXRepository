@@ -33,7 +33,7 @@ public interface RepositoryEngine {
     /**
      * Update clone, change branch whatever
      */
-    public String update(RepoConfig config);
+    public String reset(RepoConfig config);
 
     public String push(RepoConfig config);
 
@@ -41,5 +41,5 @@ public interface RepositoryEngine {
 
     public String diff(RepoConfig config) ;
 
-    public String reset(RepoConfig config);
+    public String pull(RepoConfig config);
 }

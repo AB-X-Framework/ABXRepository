@@ -37,11 +37,11 @@ public class RepositoryProcessor extends Thread {
         RepoConfig config = repoReq.config;
         RepositoryEngine engine = getEngine(config.engine);
         switch (req) {
+            case "pull":
+                config.lastKnownStatus = engine.pull(config);
+                break;
             case "reset":
                 config.lastKnownStatus = engine.reset(config);
-                break;
-            case "update":
-                config.lastKnownStatus = engine.update(config);
                 break;
             case "push":
                 config.lastKnownStatus =  engine.push(config);
@@ -51,7 +51,7 @@ public class RepositoryProcessor extends Thread {
                 config.url = config.updatedConfig.url;
                 config.branch=config.updatedConfig.branch;
                 config.creds = config.updatedConfig.creds;
-                config.lastKnownStatus =  engine.update(config);
+                config.lastKnownStatus =  engine.reset(config);
                 break;
             case "diff":
                 config.lastKnownStatus =  engine.diff(config);

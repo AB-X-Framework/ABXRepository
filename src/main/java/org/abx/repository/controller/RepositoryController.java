@@ -93,7 +93,7 @@ public class RepositoryController {
             reqs.add(new RepoReq("replace", rConfig));
         } else {
             config.put(name, repoConfig);
-            reqs.add(new RepoReq("update", repoConfig));
+            reqs.add(new RepoReq("reset", repoConfig));
         }
         semaphore.release();
         return true;

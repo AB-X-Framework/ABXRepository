@@ -16,10 +16,7 @@ import org.eclipse.jgit.util.FS;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GitRepositoryEngine implements RepositoryEngine {
     private final static String Username = "username";
@@ -34,35 +31,8 @@ public class GitRepositoryEngine implements RepositoryEngine {
     }
 
     @Override
-    public String reset(RepoConfig config) {
-        File root = new File(dir + "/" + config.user + "/" + config.name);
-        if (!root.exists()) {
-            root.mkdirs();
-            return clone(config);
-        }
-        Git git = null;
-        try {
-            git = Git.open(root);
-            git.reset().setMode(ResetCommand.ResetType.HARD) // Hard reset: working directory and index reset to HEAD
-                    .call();
-            String branch = git.getRepository().getBranch();
-            PullCommand pullCommand = git.pull();
-            pullCommand.setRemote("origin").setRemoteBranchName(branch);
-            setCreds(pullCommand, config);
-            // Execute the clone command
-            pullCommand.call();
-            // Close the repository
-            return WorkingSince + new Date() + ".";
-        } catch (Exception e) {
-            if (!RepositoryEngine.deleteFolder(root)) {
-                return "Unable to delete folder " + root.getAbsolutePath();
-            }
-            return clone(config);
-        } finally {
-            if (git != null) {
-                git.close();
-            }
-        }
+    public String pull(RepoConfig config) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**
@@ -72,7 +42,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
      * @throws Exception
      */
     @Override
-    public String update(RepoConfig config) {
+    public String reset(RepoConfig config) {
         // Create the clone command
         File root = new File(dir + "/" + config.user + "/" + config.name);
         if (!root.exists()) {
@@ -87,8 +57,32 @@ public class GitRepositoryEngine implements RepositoryEngine {
             root.mkdirs();
             return clone(config);
         }
-        String uri = getRemoteUri(root);
-        if (!uri.equals(config.url)) {
+        Git git = null;
+        try {
+            git = Git.open(root);
+            String uri = getRemoteUri(git);
+            if (!uri.equals(config.url)) {
+                git.close();
+                if (!RepositoryEngine.deleteFolder(root)) {
+                    return "Unable to delete folder " + root.getAbsolutePath();
+                }
+                root.mkdirs();
+                return clone(config);
+            }
+            if (config.branch.isEmpty()) {
+                config.branch = getDefaultBranch(git.getRepository());
+            }
+            if (config.branch.equals(getCurrentBranch(git))) {
+                pull(git, config);
+            } else {
+                setBranch(git, config);
+            }
+            git.close();
+            return WorkingSince + new Date();
+        } catch (Exception e) {
+            if (git != null) {
+                git.close();
+            }
             if (!RepositoryEngine.deleteFolder(root)) {
                 return "Unable to delete folder " + root.getAbsolutePath();
             }
@@ -96,25 +90,6 @@ public class GitRepositoryEngine implements RepositoryEngine {
             return clone(config);
         }
 
-        try {
-            if (config.branch.isEmpty()) {
-                Git git = Git.open(root);
-                config.branch = getDefaultBranch(git.getRepository());
-                git.close();
-            }
-        } catch (IOException e) {
-            if (!RepositoryEngine.deleteFolder(root)) {
-                return "Unable to delete folder " + root.getAbsolutePath();
-            }
-            root.mkdirs();
-            return clone(config);
-        }
-        String branch = getCurrentBranch(root);
-        if (config.branch.equals(branch)) {
-            return pull(root, config);
-        } else {
-            return setBranch(root, config);
-        }
     }
 
     @Override
@@ -151,56 +126,37 @@ public class GitRepositoryEngine implements RepositoryEngine {
         }
     }
 
-    private String pull(File repoDir, RepoConfig config) {
-        try {
-            Git git = Git.open(repoDir);
-
-            String branch = git.getRepository().getBranch();
-            PullCommand pullCommand = git.pull();
-            pullCommand.setRemote("origin").setRemoteBranchName(branch);
-            setCreds(pullCommand, config);
-            // Execute the clone command
-            pullCommand.call();
-            // Close the repository
-            git.close();
-            return WorkingSince + new Date() + ".";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Issue with Git: " + e.getMessage();
-        }
+    private void pull(Git git, RepoConfig config) throws Exception {
+        String branch = git.getRepository().getBranch();
+        PullCommand pullCommand = git.pull();
+        pullCommand.setRemote("origin").setRemoteBranchName(branch);
+        setCreds(pullCommand, config);
+        // Execute the clone command
+        pullCommand.call();
     }
 
-    private String setBranch(File repoDir, RepoConfig config) {
-        Git git = null;
-        try {
-            git = Git.open(repoDir);
-            Ref ref = git.getRepository().findRef("refs/heads/" + config.branch);
-            boolean create = ref == null;
-            CheckoutCommand checkoutCommand = git.checkout().setName(config.branch);
-            if (create) {
-                checkoutCommand.setCreateBranch(true).setUpstreamMode
-                        (CreateBranchCommand.SetupUpstreamMode.TRACK).
-                        setStartPoint("origin/" + config.branch);
-            }
-            // Execute the clone command
-            checkoutCommand.call();
-            // Close the repository
-            git.close();
-            return pull(repoDir, config);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Issue with Git: " + e.getMessage();
-        } finally {
-            if (git != null) {
-                git.close();
-            }
+    private void setBranch(Git git, RepoConfig config) throws Exception {
+
+        Ref ref = git.getRepository().findRef("refs/heads/" + config.branch);
+        boolean create = ref == null;
+        CheckoutCommand checkoutCommand = git.checkout().setName(config.branch);
+        if (create) {
+            checkoutCommand.setCreateBranch(true).setUpstreamMode
+                            (CreateBranchCommand.SetupUpstreamMode.TRACK).
+                    setStartPoint("origin/" + config.branch);
         }
+        // Execute the clone command
+        checkoutCommand.call();
+
     }
 
     private String clone(RepoConfig config) {
         try {
             CloneCommand cloneCommand = Git.cloneRepository().setURI(config.url).setRemote("origin").setDirectory(new File(dir + "/" + config.user + "/" + config.name));
             setCreds(cloneCommand, config);
+            if (!config.branch.isEmpty()) {
+                cloneCommand.setBranch(config.branch);
+            }
             // Execute the clone command
             Git git = cloneCommand.call();
             // Close the repository
@@ -260,59 +216,52 @@ public class GitRepositoryEngine implements RepositoryEngine {
         }
     }
 
-    public static String getRemoteUri(File repoDir) {
-        Git git = null;
-        try {// Open the repository
-            git = Git.open(repoDir);
-            Repository repository = git.getRepository();
-            // Retrieve the remote configuration for the specified remote
+    public static String getRemoteUri(Git git) throws Exception {
+        Repository repository = git.getRepository();
+        // Retrieve the remote configuration for the specified remote
+        List<RemoteConfig> remoteConfigs = RemoteConfig.getAllRemoteConfigs(repository.getConfig());
+        for (RemoteConfig remoteConfig : remoteConfigs) {
+            // Return the first URL associated with the remote
+            if (!remoteConfig.getURIs().isEmpty()) {
+                return remoteConfig.getURIs().get(0).toString();
+            }
+        }
+        return "";
+    }
 
-            List<RemoteConfig> remoteConfigs = RemoteConfig.getAllRemoteConfigs(repository.getConfig());
-            for (RemoteConfig remoteConfig : remoteConfigs) {
-                // Return the first URL associated with the remote
-                if (!remoteConfig.getURIs().isEmpty()) {
-                    return remoteConfig.getURIs().get(0).toString();
+    public static String getCurrentBranch(Git git) throws Exception {
+        Repository repository = git.getRepository();
+        // Return the current branch
+        return repository.getBranch();
+    }
+
+
+    public static String getDefaultBranch(Repository repository) throws Exception {
+        List<RemoteConfig> remotes = RemoteConfig.getAllRemoteConfigs(repository.getConfig());
+        for (RemoteConfig remote : remotes) {
+            if ("origin".equals(remote.getName())) { // Check if it's the 'origin' remote
+                List<URIish> uris = remote.getURIs();
+                if (!uris.isEmpty()) {
+                    // Use the first URI (assumes the repository has one origin URL)
+                    String remoteUrl = uris.get(0).toString();
+                    // Use lsRemoteRepository to fetch references
+                    Collection<Ref> refs = Git.lsRemoteRepository()
+                            .setRemote(remoteUrl)
+                            .setHeads(false)
+                            .setTags(false)
+                            .call();
+
+                    // Find the symbolic HEAD reference
+                    for (Ref ref : refs) {
+                        if ("HEAD".equals(ref.getName()) && ref.isSymbolic()) {
+                            // Parse the default branch from the symbolic reference
+                            String target = ref.getTarget().getName();
+                            return target.substring("refs/heads/".length()); // Trim "refs/heads/" prefix
+                        }
+                    }
                 }
             }
-            return "";
-        } catch (Exception e) {
-            return "";
-        } finally {
-            if (git != null) {
-                git.close();
-            }
         }
-    }
-
-    public static String getCurrentBranch(File repoDir) {
-        Git git = null;
-        try {// Open the repository located at the specified path
-            Git.open(repoDir);
-            Repository repository = git.getRepository();
-            // Return the current branch
-            return repository.getBranch();
-        } catch (Exception e) {
-            return "";
-        } finally {
-            if (git != null) {
-                git.close();
-            }
-        }
-    }
-
-
-    private String getDefaultBranch(Repository repository) throws IOException {
-        // Resolve HEAD to get the symbolic reference
-        Ref headRef = repository.findRef("HEAD");
-
-        if (headRef != null && headRef.isSymbolic()) {
-            // Get the target of the symbolic reference (the default branch)
-            String target = headRef.getTarget().getName();
-
-            // Return the branch name (e.g., "refs/heads/main" -> "main")
-            return target.substring("refs/heads/".length());
-        }
-
-        return null; // Default branch could not be determined
+        return ""; // Default branch not found
     }
 }
