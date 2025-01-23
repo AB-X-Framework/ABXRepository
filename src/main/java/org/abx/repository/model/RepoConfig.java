@@ -8,7 +8,7 @@ public class RepoConfig {
     public String engine;
     public String url;
 
-    public String message;
+    public String pushMessage;
     public Map<String, String> creds;
 
     public List<String> diff;
@@ -19,9 +19,10 @@ public class RepoConfig {
     public boolean valid;
 
     public RepoConfig() {
+        valid = true;
         creds = new HashMap<>();
         diff = new ArrayList<>();
-        message ="push";
+        pushMessage ="push";
         branch = "";
     }
 

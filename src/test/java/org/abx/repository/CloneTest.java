@@ -69,7 +69,8 @@ public class CloneTest {
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
         req.addPart("url", "https://github.com/luislara/simplerepo.git");
-        req.addPart("creds", "{\"branch\":\"main\"}");
+        req.addPart("creds", "{}");
+        req.addPart("branch", "");
         ServiceResponse resp = servicesClient.process(req);
         Assertions.assertEquals(200, resp.statusCode());
 
@@ -121,7 +122,8 @@ public class CloneTest {
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
         req.addPart("url", "https://github.com/luislara/simplerepo.git");
-        req.addPart("creds", "{\"branch\":\"super\"}");
+        req.addPart("branch", "super");
+        req.addPart("creds", "{}");
         req.jwt(token);
         resp = servicesClient.process(req);
 

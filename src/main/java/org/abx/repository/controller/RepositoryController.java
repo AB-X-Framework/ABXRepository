@@ -66,6 +66,7 @@ public class RepositoryController {
                           @RequestParam String engine,
                           @RequestParam String name,
                           @RequestParam String url,
+                          @RequestParam String branch,
                           @RequestParam String creds) throws ServletException, IOException {
         String username = request.getUserPrincipal().getName();
         RepoConfig repoConfig = new RepoConfig();
@@ -73,6 +74,7 @@ public class RepositoryController {
         repoConfig.name = name;
         repoConfig.url = url;
         repoConfig.user = username;
+        repoConfig.branch = branch;
         repoConfig.engine = engine;
         JSONObject jsonCreds = new JSONObject(creds);
         for (String key : jsonCreds.keySet()) {
@@ -88,7 +90,7 @@ public class RepositoryController {
                 return false;
             }
             rConfig.updatedConfig = repoConfig;
-            reqs.add(new RepoReq("replace", repoConfig));
+            reqs.add(new RepoReq("replace", rConfig));
         } else {
             config.put(name, repoConfig);
             reqs.add(new RepoReq("update", repoConfig));

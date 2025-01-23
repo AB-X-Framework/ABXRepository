@@ -49,8 +49,8 @@ public class RepositoryProcessor extends Thread {
             case "replace":
                 config.engine=config.updatedConfig.engine;
                 config.url = config.updatedConfig.url;
+                config.branch=config.updatedConfig.branch;
                 config.creds = config.updatedConfig.creds;
-                config.lastKnownStatus = "Updating";
                 config.lastKnownStatus =  engine.update(config);
                 break;
             case "diff":

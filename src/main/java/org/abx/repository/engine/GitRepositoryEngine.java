@@ -25,7 +25,6 @@ public class GitRepositoryEngine implements RepositoryEngine {
     private final static String Username = "username";
     private final static String Password = "password";
     private final static String Ssh = "ssh";
-    private final static String Branch = "branch";
     private final static String Passphrase = "passphrase";
     private String dir;
 
@@ -41,8 +40,9 @@ public class GitRepositoryEngine implements RepositoryEngine {
             root.mkdirs();
             return clone(config);
         }
+        Git git = null;
         try {
-            Git git = Git.open(root);
+            git = Git.open(root);
             git.reset().setMode(ResetCommand.ResetType.HARD) // Hard reset: working directory and index reset to HEAD
                     .call();
             String branch = git.getRepository().getBranch();
@@ -52,13 +52,16 @@ public class GitRepositoryEngine implements RepositoryEngine {
             // Execute the clone command
             pullCommand.call();
             // Close the repository
-            git.close();
             return WorkingSince + new Date() + ".";
         } catch (Exception e) {
             if (!RepositoryEngine.deleteFolder(root)) {
                 return "Unable to delete folder " + root.getAbsolutePath();
             }
             return clone(config);
+        } finally {
+            if (git != null) {
+                git.close();
+            }
         }
     }
 
@@ -92,10 +95,22 @@ public class GitRepositoryEngine implements RepositoryEngine {
             root.mkdirs();
             return clone(config);
         }
-        String configBranch = config.creds.get(Branch);
 
+        try {
+            if (config.branch.isEmpty()) {
+                Git git = Git.open(root);
+                config.branch = getDefaultBranch(git.getRepository());
+                git.close();
+            }
+        } catch (IOException e) {
+            if (!RepositoryEngine.deleteFolder(root)) {
+                return "Unable to delete folder " + root.getAbsolutePath();
+            }
+            root.mkdirs();
+            return clone(config);
+        }
         String branch = getCurrentBranch(root);
-        if (configBranch == null || configBranch.isEmpty() || configBranch.equals(branch)) {
+        if (config.branch.equals(branch)) {
             return pull(root, config);
         } else {
             return setBranch(root, config);
@@ -128,6 +143,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
                 // You can use diffEntry.getNewPath() to get the path of the file in the current version
                 filePaths.add(diffEntry.getNewPath());
             }
+            git.close();
             config.diff = filePaths;
             return WorkingSince + new Date() + ".";
         } catch (Exception e) {
@@ -155,13 +171,16 @@ public class GitRepositoryEngine implements RepositoryEngine {
     }
 
     private String setBranch(File repoDir, RepoConfig config) {
+        Git git = null;
         try {
-            String branch = config.creds.get(Branch);
-            boolean create = !doesLocalBranchExist(repoDir, branch);
-            Git git = Git.open(repoDir);
-            CheckoutCommand checkoutCommand = git.checkout().setName(branch);
+            git = Git.open(repoDir);
+            Ref ref = git.getRepository().findRef("refs/heads/" + config.branch);
+            boolean create = ref == null;
+            CheckoutCommand checkoutCommand = git.checkout().setName(config.branch);
             if (create) {
-                checkoutCommand.setCreateBranch(true).setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK).setStartPoint("origin/" + branch);
+                checkoutCommand.setCreateBranch(true).setUpstreamMode
+                        (CreateBranchCommand.SetupUpstreamMode.TRACK).
+                        setStartPoint("origin/" + config.branch);
             }
             // Execute the clone command
             checkoutCommand.call();
@@ -171,6 +190,10 @@ public class GitRepositoryEngine implements RepositoryEngine {
         } catch (Exception e) {
             e.printStackTrace();
             return "Issue with Git: " + e.getMessage();
+        } finally {
+            if (git != null) {
+                git.close();
+            }
         }
     }
 
@@ -238,8 +261,9 @@ public class GitRepositoryEngine implements RepositoryEngine {
     }
 
     public static String getRemoteUri(File repoDir) {
+        Git git = null;
         try {// Open the repository
-            Git git = Git.open(repoDir);
+            git = Git.open(repoDir);
             Repository repository = git.getRepository();
             // Retrieve the remote configuration for the specified remote
 
@@ -253,36 +277,31 @@ public class GitRepositoryEngine implements RepositoryEngine {
             return "";
         } catch (Exception e) {
             return "";
+        } finally {
+            if (git != null) {
+                git.close();
+            }
         }
     }
 
     public static String getCurrentBranch(File repoDir) {
+        Git git = null;
         try {// Open the repository located at the specified path
-            Git git = Git.open(repoDir);
+            Git.open(repoDir);
             Repository repository = git.getRepository();
             // Return the current branch
             return repository.getBranch();
         } catch (Exception e) {
             return "";
+        } finally {
+            if (git != null) {
+                git.close();
+            }
         }
     }
 
-    private boolean doesLocalBranchExist(File repoDir, String branchName) {
-        try {
-            // Initialize the repository
-            Git git = Git.open(repoDir);
-            Repository repository = git.getRepository();
 
-            // Check if the branch exists locally
-            Ref ref = repository.findRef("refs/heads/" + branchName);
-            return ref != null;  // Returns true if the branch exists, otherwise false
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;  // If repository access fails, return false
-        }
-    }
-
-   private String getDefaultBranch(Repository repository) throws IOException {
+    private String getDefaultBranch(Repository repository) throws IOException {
         // Resolve HEAD to get the symbolic reference
         Ref headRef = repository.findRef("HEAD");
 
