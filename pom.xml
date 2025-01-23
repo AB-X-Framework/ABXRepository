@@ -12,7 +12,7 @@
     <repositories>
         <repository>
             <id>github-ABXUSArch</id>
-            <url>https://maven.pkg.github.com/AB-X-Framework/WSArch</url>
+            <url>https://maven.pkg.github.com/AB-X-Framework/ABXUSArch</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>

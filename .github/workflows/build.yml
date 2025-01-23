@@ -26,7 +26,8 @@ jobs:
         uses: s4u/maven-settings-action@v2.5.0
         with:
           servers: '[
-            {"id": "github-ABXUSArch","configuration": {"httpHeaders": {"property": {"name": "Authorization","value": "Bearer ${{ secrets.GITHUB_TOKEN }}"}}}}
+            {"id": "github-ABXUSArch","configuration": {"httpHeaders": {"property": {"name": "Authorization","value": "Bearer ${{ secrets.GITHUB_TOKEN }}"}}}},
+            {"id": "github-ABXRepository","configuration": {"httpHeaders": {"property": {"name": "Authorization","value": "Bearer ${{ secrets.GITHUB_TOKEN }}"}}}}
           ]'
 
             # Step 3: Compile and deploy ABX Repository
