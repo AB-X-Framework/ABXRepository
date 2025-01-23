@@ -116,6 +116,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
         try {
             Git git = Git.open(repoDir);
             CheckoutCommand checkoutCommand = git.checkout().
+                    setCreateBranch(true).
                     setName(config.creds.get(Branch));
             // Execute the clone command
             checkoutCommand.call();

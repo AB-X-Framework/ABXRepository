@@ -5,6 +5,7 @@ import org.abx.repository.spring.ABXRepositoryEntry;
 import org.abx.services.ServiceRequest;
 import org.abx.services.ServiceResponse;
 import org.abx.services.ServicesClient;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -41,12 +42,13 @@ public class CloneTest {
 
     @Test
     public void doTest() throws Exception {
+        String repositoryName = "repo";
         String token = JWTUtils.generateToken("dummy", privateKey, 60,
                 List.of("repository"));
         ServiceRequest req = servicesClient.post("repository", "/repository/update");
         req.jwt(token);
         req.addPart("engine", "git");
-        req.addPart("name", "repo");
+        req.addPart("name", repositoryName);
         req.addPart("url", "https://github.com/luislara/simplerepo.git");
         req.addPart("creds", "{}");
         ServiceResponse resp = servicesClient.process(req);
@@ -67,7 +69,7 @@ public class CloneTest {
             resp = servicesClient.process(req);
             r = resp.asJSONObject();
             System.out.println(r.toString());
-            status= r.getString("repo");
+            status = r.getString("repo");
             if (status.startsWith(WorkingSince)) {
                 working = true;
                 break;
@@ -75,6 +77,64 @@ public class CloneTest {
             Thread.sleep(1000);
         }
         Assertions.assertTrue(working, status);
+
+        req = servicesClient.get("repository", "/repository/details");
+        req.jwt(token);
+        resp = servicesClient.process(req);
+        JSONArray jsonArray = resp.asJSONArray();
+        int id = idWithName(jsonArray, "repo");
+
+        req = servicesClient.get("repository", "/repository/details?id=" + id);
+        req.jwt(token);
+        resp = servicesClient.process(req);
+        System.out.println(resp.asJSONArray());
+
+
+        req = servicesClient.get("repository", "/repository/data?path=/" +
+                repositoryName + "/README.md");
+        req.jwt(token);
+        resp = servicesClient.process(req);
+        Assertions.assertEquals("simplerepo", resp.asString().trim());
+
+        req = servicesClient.post("repository", "/repository/update");
+        req.jwt(token);
+        req.addPart("engine", "git");
+        req.addPart("name", repositoryName);
+        req.addPart("url", "https://github.com/luislara/simplerepo.git");
+        req.addPart("creds", "{\"branch\":\"super\"}");
+        req.jwt(token);
+        resp = servicesClient.process(req);
+
+        boolean found = false;
+        for (int i = 0; i < 10; ++i) {
+            req = servicesClient.get("repository", "/repository/data?path=/" +
+                    repositoryName + "/README.md");
+            req.jwt(token);
+            resp = servicesClient.process(req);
+            if ("superbranch".equals(resp.asString().trim())) {
+                found = true;
+                break;
+            }
+
+            req = servicesClient.get("repository", "/repository/status");
+            req.jwt(token);
+            resp = servicesClient.process(req);
+            r = resp.asJSONObject();
+            System.out.println(r.toString());
+            Thread.sleep(1000);
+        }
+        Assertions.assertTrue(found);
+
+    }
+
+    private int idWithName(JSONArray jsonArray, String name) {
+        for (int i = 0; i < jsonArray.length(); ++i) {
+            JSONObject obj = jsonArray.getJSONObject(i);
+            if (obj.getString("name").equals(name)) {
+                return obj.getInt("id");
+            }
+        }
+        return -1;
     }
 
     @AfterAll

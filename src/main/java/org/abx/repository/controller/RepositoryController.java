@@ -7,16 +7,23 @@ import org.abx.repository.model.ConfigHolder;
 import org.abx.repository.model.RepoConfig;
 import org.abx.repository.model.RepoReq;
 import org.abx.repository.model.UserRepoConfig;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -26,17 +33,22 @@ import java.util.concurrent.Semaphore;
 @RequestMapping("/repository")
 public class RepositoryController {
 
+
     public static final String Initializing = "Initializing";
+
+    protected final ConcurrentLinkedQueue<RepoReq> reqs;
+    protected final Semaphore semaphore;
     @Value("${repository.dir}")
     private String dir;
-    private ConfigHolder configHolder;
-    protected ConcurrentLinkedQueue<RepoReq> reqs;
-    protected Semaphore semaphore;
+
+    private final ConfigHolder configHolder;
+    private final HashMap<Integer, String> files;
 
     public RepositoryController() {
         configHolder = new ConfigHolder();
         reqs = new ConcurrentLinkedQueue<>();
         semaphore = new Semaphore(0);
+        files = new HashMap<>();
     }
 
 
@@ -88,6 +100,79 @@ public class RepositoryController {
             result.put(config.name, config.lastKnownStatus);
         }
         return result;
+    }
+
+    protected JSONObject getData(File file, String path, boolean inner) {
+        JSONObject jsonObject = new JSONObject();
+        String name = file.getName();
+        jsonObject.put("name", name);
+        jsonObject.put("path", path);
+        int id = path.hashCode();
+        files.put(id, path);
+        jsonObject.put("id", id);
+        if (file.isFile()) {
+            long size = Math.max(1, file.length() / 1024);
+            jsonObject.put("size", size + " KB");
+            jsonObject.put("type", "file");
+            jsonObject.put("closed", true);
+        } else if (file.isDirectory()) {
+            jsonObject.put("type", "folder");
+            jsonObject.put("size", "");
+            if (inner) {
+                JSONArray children = new JSONArray();
+                jsonObject.put("children", children);
+
+                File[] files = file.listFiles();
+                Arrays.sort(files, (f1, f2) -> {
+                    if (f1.isDirectory() && f2.isFile()) {
+                        return -1;
+                    } else if (f1.isFile() && f2.isDirectory()) {
+                        return 1;
+                    }
+                    return f1.getName().compareTo(f2.getName());
+                });
+                for (int i = 0; i < files.length; ++i) {
+                    children.put(getData(files[i], path + "/" + files[i].getName(), false));
+                }
+                if (files.length == 0) {
+                    jsonObject.put("state", "closed");
+                }
+            } else {
+                jsonObject.put("state", "closed");
+            }
+        }
+        return jsonObject;
+    }
+
+
+    @Secured("repository")
+    @GetMapping(path = "/details", produces = "application/json")
+    public String details(HttpServletRequest req, @RequestParam(name = "id", required = false) String id) throws Exception {
+        File workingFolder = new File(dir + "/" + req.getUserPrincipal().getName());
+        if (id == null) {
+            JSONArray data = getData(workingFolder, "", true).getJSONArray("children");
+            return data.toString(1);
+        } else {
+            String path = files.get(Integer.parseInt(id));
+            return getData(new File(workingFolder, path), path, true).getJSONArray("children").toString(0);
+        }
+    }
+
+    @Secured("repository")
+    @GetMapping("/data")
+    public ResponseEntity<InputStreamResource> data(HttpServletRequest req, @RequestParam String path) throws Exception {
+        File workingFile = new File(dir + "/" +
+                req.getUserPrincipal().getName() + path);
+        // Set headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=" +
+                workingFile.getName());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(workingFile.length())
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(new InputStreamResource(new FileInputStream(workingFile)));
     }
 
 }
