@@ -34,7 +34,6 @@ public class RepositoryProcessor extends Thread {
         RepositoryEngine engine = getEngine(config);
         switch (req) {
             case "update":
-
                 config.lastKnownStatus = engine.update(config);
                 break;
             case "push":

@@ -11,18 +11,14 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.userdetails.User;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 
@@ -84,12 +80,11 @@ public class RepositoryController {
     }
 
 
-
     @Secured("repository")
     @RequestMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String,String> status(HttpServletRequest request){
-        Map<String,String> result = new HashMap<>();
-        for (RepoConfig config : configHolder.get(request.getUserPrincipal().getName()).values()){
+    public Map<String, String> status(HttpServletRequest request) {
+        Map<String, String> result = new HashMap<>();
+        for (RepoConfig config : configHolder.get(request.getUserPrincipal().getName()).values()) {
             result.put(config.name, config.lastKnownStatus);
         }
         return result;
