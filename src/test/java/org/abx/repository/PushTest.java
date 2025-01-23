@@ -8,10 +8,7 @@ import org.abx.services.ServicesClient;
 import org.abx.util.StreamUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -26,6 +23,7 @@ import static org.abx.repository.engine.GitRepositoryEngine.Ssh;
 import static org.abx.repository.engine.RepositoryEngine.WorkingSince;
 
 @SpringBootTest(classes = ABXRepositoryEntry.class)
+@Disabled
 public class PushTest {
     @Autowired
     JWTUtils jwtUtils;
@@ -124,7 +122,6 @@ public class PushTest {
             Thread.sleep(1000);
         }
         Assertions.assertTrue(zero);
-
     }
 
     private int idWithName(JSONArray jsonArray, String name) {

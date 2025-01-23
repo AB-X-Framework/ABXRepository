@@ -110,6 +110,9 @@ public class GitRepositoryEngine implements RepositoryEngine {
                 addCommand.addFilepattern(fileName);
             }
             addCommand.call();
+            CommitCommand commitCommand = git.commit();
+            commitCommand.setMessage(pushMessage);
+            commitCommand.call();
             PushCommand pushCommand = git.push();
             setCreds(pushCommand, config);
             pushCommand.call();
