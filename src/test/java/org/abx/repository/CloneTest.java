@@ -47,7 +47,7 @@ public class CloneTest {
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("name", "repo");
-        req.addPart("url", "git@github.com:luislara/simplerepo.git");
+        req.addPart("url", "https://github.com/luislara/simplerepo.git");
         req.addPart("creds", "{}");
         ServiceResponse resp = servicesClient.process(req);
         Assertions.assertEquals(200, resp.statusCode());

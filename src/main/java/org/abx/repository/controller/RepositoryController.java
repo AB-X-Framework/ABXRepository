@@ -41,13 +41,13 @@ public class RepositoryController {
         configHolder = new ConfigHolder();
         reqs = new ConcurrentLinkedQueue<>();
         semaphore = new Semaphore(0);
-        new RepositoryProcessor(this).start();
     }
 
 
     @PostConstruct
     public void init() {
         new File(dir).mkdirs();
+        new RepositoryProcessor(dir, this).start();
     }
 
     @Secured("repository")

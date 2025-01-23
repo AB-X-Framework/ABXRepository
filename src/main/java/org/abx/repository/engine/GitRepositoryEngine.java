@@ -38,69 +38,70 @@ public class GitRepositoryEngine implements RepositoryEngine {
      * @param config
      * @throws Exception
      */
-    public String update(RepoConfig config)  {
+    public String update(RepoConfig config) {
         try {
             // Create the clone command
             File root = new File(dir + "/" + config.user + "/" + config.name);
             root.mkdirs();
             CloneCommand cloneCommand = Git.cloneRepository()
                     .setURI(config.url)
+                    .setRemote("origin")
                     .setDirectory(new File(dir + "/" + config.user + "/" + config.name));
             setCreds(cloneCommand, config);
             // Execute the clone command
             Git git = cloneCommand.call();
             // Close the repository
             git.close();
-            return WorkingSince+new Date()+".";
+            return WorkingSince + new Date() + ".";
         } catch (Exception e) {
+            e.printStackTrace();
             return "Issue with Git: " + e.getMessage();
         }
     }
 
-    public String push(RepoConfig config)  {
+    public String push(RepoConfig config) {
         throw new RuntimeException("push not implemented");
     }
 
 
-    public String rollback(RepoConfig config)  {
+    public String rollback(RepoConfig config) {
         throw new RuntimeException("rollback not implemented");
     }
 
-    public String rollbackFile(RepoConfig config, String file)  {
+    public String rollbackFile(RepoConfig config, String file) {
         throw new RuntimeException("rollback not implemented");
     }
 
-    public String commit(RepoConfig config)  {
-
-        throw new RuntimeException("rollback not implemented");
-    }
-
-    public List<String> diff(RepoConfig config){
+    public String commit(RepoConfig config) {
 
         throw new RuntimeException("rollback not implemented");
     }
 
-    private void setCreds(TransportCommand command, RepoConfig config)  {
+    public List<String> diff(RepoConfig config) {
+
+        throw new RuntimeException("rollback not implemented");
+    }
+
+    private void setCreds(TransportCommand command, RepoConfig config) {
         Map<String, String> creds = config.creds;
         if (creds.containsKey(Username)) {
-            CredentialsProvider credsProvider =  new UsernamePasswordCredentialsProvider
+            CredentialsProvider credsProvider = new UsernamePasswordCredentialsProvider
                     (creds.get(Username), creds.get(Password));
             command.setCredentialsProvider(credsProvider);
         } else if (creds.containsKey(Ssh)) {
             String privateKey = creds.get(Ssh);
             byte[] privateKeyBytes = privateKey.getBytes(StandardCharsets.UTF_8);
-
-            byte []passphraseBytes;
+            byte[] passphraseBytes;
             if (creds.containsKey(Passphrase)) {
                 passphraseBytes = creds.get(Passphrase).getBytes(StandardCharsets.UTF_8);
-            }else {
-                passphraseBytes=null;
+            } else {
+                passphraseBytes = null;
             }
-            String passphrase = creds.get(Password);
-            SshSessionFactory sshSessionFactory = new   JschConfigSessionFactory() {
+            SshSessionFactory sshSessionFactory = new JschConfigSessionFactory() {
                 @Override
                 protected void configure(OpenSshConfig.Host hc, Session session) {
                     // Additional configurations if needed
+                    session.setConfig("StrictHostKeyChecking", "no");
                 }
 
                 @Override
@@ -113,6 +114,18 @@ public class GitRepositoryEngine implements RepositoryEngine {
             command.setTransportConfigCallback(transport -> {
                 if (transport instanceof SshTransport sshTransport) {
                     sshTransport.setSshSessionFactory(sshSessionFactory);
+                }
+            });
+        } else if (config.url.startsWith("git")) {
+            command.setTransportConfigCallback(transport -> {
+                if (transport instanceof SshTransport sshTransport) {
+                    sshTransport.setSshSessionFactory(new JschConfigSessionFactory() {
+                        @Override
+                        protected void configure(OpenSshConfig.Host hc, Session session) {
+                            // Additional configurations if needed
+                            session.setConfig("StrictHostKeyChecking", "no");
+                        }
+                    });
                 }
             });
         }

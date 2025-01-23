@@ -8,8 +8,11 @@ import org.abx.repository.model.RepoReq;
 public class RepositoryProcessor extends Thread {
     private final RepositoryController controller;
 
-    public RepositoryProcessor(RepositoryController controller) {
+    private final GitRepositoryEngine gitEngine;
+    public RepositoryProcessor(String dir,RepositoryController controller) {
         this.controller = controller;
+        gitEngine = new GitRepositoryEngine();
+        gitEngine.setDir(dir);
     }
 
     @Override
@@ -31,17 +34,18 @@ public class RepositoryProcessor extends Thread {
         RepositoryEngine engine = getEngine(config);
         switch (req) {
             case "update":
-                engine.update(config);
+
+                config.lastKnownStatus = engine.update(config);
                 break;
             case "push":
-                engine.push(config);
+                config.lastKnownStatus =  engine.push(config);
                 break;
             case "replace":
                 config.engine=config.updatedConfig.engine;
                 config.url = config.updatedConfig.url;
                 config.creds = config.updatedConfig.creds;
                 config.lastKnownStatus = "Updating";
-                engine.update(config);
+                config.lastKnownStatus =  engine.update(config);
                 break;
         }
     }
@@ -49,7 +53,7 @@ public class RepositoryProcessor extends Thread {
     private RepositoryEngine getEngine(RepoConfig config) throws Exception {
         switch (config.engine) {
             case "git":
-                return new GitRepositoryEngine();
+                return gitEngine;
             default:
                 throw new Exception("Unknown engine " + config.engine);
         }
