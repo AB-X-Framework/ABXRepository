@@ -44,4 +44,6 @@ public interface RepositoryEngine {
     public String commit(RepoConfig config);
 
     public List<String> diff(RepoConfig config);
+
+    public String rebuild(RepoConfig config);
 }

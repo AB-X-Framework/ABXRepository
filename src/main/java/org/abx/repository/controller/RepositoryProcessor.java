@@ -33,6 +33,9 @@ public class RepositoryProcessor extends Thread {
         RepoConfig config = repoReq.config;
         RepositoryEngine engine = getEngine(config);
         switch (req) {
+            case "rebuild":
+                config.lastKnownStatus = engine.rebuild(config);
+                break;
             case "update":
                 config.lastKnownStatus = engine.update(config);
                 break;

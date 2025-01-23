@@ -31,6 +31,14 @@ public class GitRepositoryEngine implements RepositoryEngine {
         this.dir = dir;
     }
 
+    public String rebuild(RepoConfig config) {
+        File root = new File(dir + "/" + config.user + "/" + config.name);
+        if (!RepositoryEngine.deleteFolder(root)) {
+            return "Unable to delete folder " + root.getAbsolutePath();
+        }
+        return clone(config);
+    }
+
     /**
      * Update clone, change branch whatever
      *
