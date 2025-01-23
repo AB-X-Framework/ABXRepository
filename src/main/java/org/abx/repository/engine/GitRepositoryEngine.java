@@ -14,7 +14,6 @@ import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig;
 import org.eclipse.jgit.util.FS;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -32,7 +31,20 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     @Override
     public String pull(RepoConfig config) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Git git = null;
+        try {
+            PullCommand pullCommand = git.pull();
+            pullCommand.setRemote("origin").setRemoteBranchName(getCurrentBranch(git));
+            setCreds(pullCommand, config);
+            pullCommand.call();
+            return WorkingSince + new Date();
+        } catch (Exception e) {
+            return "Error with Git: " + e.getMessage();
+        } finally {
+            if (git != null) {
+                git.close();
+            }
+        }
     }
 
     /**
@@ -99,7 +111,23 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     @Override
     public String rollbackFile(RepoConfig config, String file) {
-        throw new RuntimeException("rollback not implemented");
+        File root = new File(dir + "/" + config.user + "/" + config.name);
+        Git git = null;
+        try {
+            Git.open(root);
+            // Checkout the file to revert it to its state in HEAD
+            git.checkout()
+                    .addPath(file)
+                    .call();
+        } catch (Exception e) {
+            return "Error with Git: " + e.getMessage();
+        } finally {
+            if (git != null) {
+                git.close();
+            }
+        }
+        // Expecting git closed
+        return diff(config);
     }
 
     @Override
@@ -136,7 +164,6 @@ public class GitRepositoryEngine implements RepositoryEngine {
     }
 
     private void setBranch(Git git, RepoConfig config) throws Exception {
-
         Ref ref = git.getRepository().findRef("refs/heads/" + config.branch);
         boolean create = ref == null;
         CheckoutCommand checkoutCommand = git.checkout().setName(config.branch);

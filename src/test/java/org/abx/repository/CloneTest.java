@@ -91,8 +91,8 @@ public class CloneTest {
         resp = servicesClient.process(req);
         System.out.println(resp.asJSONArray());
 
-
-        String path ="/"+ repositoryName + "/README.md";
+        String filename = "README.md";
+        String path ="/"+ repositoryName + "/"+filename;
         req = servicesClient.get("repository", "/repository/data?path=" +
                 path);
         req.jwt(token);
@@ -135,12 +135,22 @@ public class CloneTest {
         req.addPart("path", path);
         resp = servicesClient.process(req);
         Assertions.assertTrue(resp.asBoolean());
-
-
-        req = servicesClient.get("repository", "/repository/diff?repository=repo");
-        req.jwt(token);
-        resp = servicesClient.process(req);
-        System.out.println(resp.asJSONArray());
+        found = false;
+        for (int i = 0; i < 10; ++i) {
+            req = servicesClient.get("repository", "/repository/diff?repository=repo");
+            req.jwt(token);
+            resp = servicesClient.process(req);
+            jsonArray = resp.asJSONArray();
+            if (jsonArray.length() > 0) {
+                String diff = jsonArray.getString(0);
+                if (diff.equals(filename)) {
+                    found = true;
+                    break;
+                }
+            }
+            Thread.sleep(1000);
+        }
+        Assertions.assertTrue(found);
 
 
 
