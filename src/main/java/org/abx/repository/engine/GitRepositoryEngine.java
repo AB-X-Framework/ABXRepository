@@ -102,7 +102,22 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     @Override
     public String push(RepoConfig config, List<String> files, String pushMessage) {
-        throw new RuntimeException("push not implemented");
+        File root = new File(dir + "/" + config.user + "/" + config.name);
+        try (Git git = Git.open(root)) {
+            // Checkout the file to revert it to its state in HEAD
+            AddCommand addCommand = git.add();
+            for (String fileName : files) {
+                addCommand.addFilepattern(fileName);
+            }
+            addCommand.call();
+            PushCommand pushCommand = git.push();
+            setCreds(pushCommand, config);
+            pushCommand.call();
+        } catch (Exception e) {
+            return "Error with Git: " + e.getMessage();
+        }
+        // Expecting git closed
+        return diff(config);
     }
 
     @Override
