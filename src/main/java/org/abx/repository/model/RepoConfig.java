@@ -11,6 +11,7 @@ public class RepoConfig {
     public String engine;
     public String url;
 
+    public String message;
     public Map<String, String> creds;
 
     public Set<String> diff;
@@ -20,6 +21,7 @@ public class RepoConfig {
     public RepoConfig() {
         creds = new HashMap<>();
         diff = new HashSet<>();
+        message ="push";
     }
 
     public RepoConfig updatedConfig;

@@ -50,7 +50,7 @@ public class CloneTest {
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
         req.addPart("url", "https://github.com/luislara/simplerepo.git");
-        req.addPart("creds", "{}");
+        req.addPart("creds", "{\"branch\":\"main\"}");
         ServiceResponse resp = servicesClient.process(req);
         Assertions.assertEquals(200, resp.statusCode());
 
@@ -90,8 +90,9 @@ public class CloneTest {
         System.out.println(resp.asJSONArray());
 
 
-        req = servicesClient.get("repository", "/repository/data?path=/" +
-                repositoryName + "/README.md");
+        String path ="/"+ repositoryName + "/README.md";
+        req = servicesClient.get("repository", "/repository/data?path=" +
+                path);
         req.jwt(token);
         resp = servicesClient.process(req);
         Assertions.assertEquals("simplerepo", resp.asString().trim());
@@ -107,8 +108,8 @@ public class CloneTest {
 
         boolean found = false;
         for (int i = 0; i < 10; ++i) {
-            req = servicesClient.get("repository", "/repository/data?path=/" +
-                    repositoryName + "/README.md");
+            req = servicesClient.get("repository", "/repository/data?path=" +
+                    path);
             req.jwt(token);
             resp = servicesClient.process(req);
             if ("superbranch".equals(resp.asString().trim())) {
@@ -124,6 +125,19 @@ public class CloneTest {
             Thread.sleep(1000);
         }
         Assertions.assertTrue(found);
+
+        req = servicesClient.post("repository", "/repository/upload");
+        req.jwt(token);
+        req.addPart("file", "newData".getBytes(), "data.txt");
+        req.addPart("path", path);
+        resp = servicesClient.process(req);
+        Assertions.assertTrue(resp.asBoolean());
+
+
+        req = servicesClient.get("repository", "/repository/diff?repository=repo");
+        req.jwt(token);
+        resp = servicesClient.process(req);
+        System.out.println(resp.asJSONArray());
 
     }
 

@@ -31,7 +31,7 @@ public class RepositoryProcessor extends Thread {
     private void process(RepoReq repoReq) throws Exception {
         String req = repoReq.req;
         RepoConfig config = repoReq.config;
-        RepositoryEngine engine = getEngine(config);
+        RepositoryEngine engine = getEngine(config.engine);
         switch (req) {
             case "rebuild":
                 config.lastKnownStatus = engine.rebuild(config);
@@ -52,12 +52,12 @@ public class RepositoryProcessor extends Thread {
         }
     }
 
-    private RepositoryEngine getEngine(RepoConfig config) throws Exception {
-        switch (config.engine) {
+    public RepositoryEngine getEngine(String engine) throws Exception {
+        switch (engine) {
             case "git":
                 return gitEngine;
             default:
-                throw new Exception("Unknown engine " + config.engine);
+                throw new Exception("Unknown engine " + engine);
         }
     }
 }

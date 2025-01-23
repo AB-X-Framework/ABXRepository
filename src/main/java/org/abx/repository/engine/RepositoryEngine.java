@@ -39,11 +39,7 @@ public interface RepositoryEngine {
 
     public String rollbackFile(RepoConfig config, String path);
 
-    public String rollback(RepoConfig config);
+    public List<String> diff(RepoConfig config) throws Exception;
 
-    public String commit(RepoConfig config);
-
-    public List<String> diff(RepoConfig config);
-
-    public String rebuild(RepoConfig config);
+    public String reset(RepoConfig config);
 }

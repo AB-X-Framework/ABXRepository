@@ -3,10 +3,12 @@ package org.abx.repository.controller;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.abx.repository.engine.RepositoryEngine;
 import org.abx.repository.model.ConfigHolder;
 import org.abx.repository.model.RepoConfig;
 import org.abx.repository.model.RepoReq;
 import org.abx.repository.model.UserRepoConfig;
+import org.abx.util.StreamUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,16 +17,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
@@ -43,7 +42,7 @@ public class RepositoryController {
 
     private final ConfigHolder configHolder;
     private final HashMap<Integer, String> files;
-
+    private RepositoryProcessor repositoryProcessor;
     public RepositoryController() {
         configHolder = new ConfigHolder();
         reqs = new ConcurrentLinkedQueue<>();
@@ -55,7 +54,9 @@ public class RepositoryController {
     @PostConstruct
     public void init() {
         new File(dir).mkdirs();
-        new RepositoryProcessor(dir, this).start();
+        repositoryProcessor=  new RepositoryProcessor(dir, this);
+
+        repositoryProcessor.start();
     }
 
     @Secured("repository")
@@ -102,7 +103,7 @@ public class RepositoryController {
         return result;
     }
 
-    protected JSONObject getData(File file, String path, boolean inner) {
+    private JSONObject getData(File file, String path, boolean inner) {
         JSONObject jsonObject = new JSONObject();
         String name = file.getName();
         jsonObject.put("name", name);
@@ -175,4 +176,28 @@ public class RepositoryController {
                 .body(new InputStreamResource(new FileInputStream(workingFile)));
     }
 
+    @Secured("repository")
+    @PostMapping("/upload")
+    public boolean upload(HttpServletRequest req,
+                                   @RequestParam("path") String path,
+                                   @RequestParam("file") MultipartFile file) throws IOException {
+        File workingFile = new File(dir + "/" +
+                req.getUserPrincipal().getName() + path);
+        InputStream reqInputStream = file.getInputStream();
+        FileOutputStream fileOutputStream = new FileOutputStream(workingFile);
+        StreamUtils.copyStream(reqInputStream, fileOutputStream);
+        fileOutputStream.close();
+        reqInputStream.close();
+        return true;
+    }
+
+    @GetMapping(path = "/upload",produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> diff(HttpServletRequest req,
+                             @RequestParam("repository") String repository) throws Exception {
+        RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
+                getName()).get(repository);
+
+        RepositoryEngine engine = repositoryProcessor.getEngine(repoConfig.engine);
+        return engine.diff(repoConfig);
+    }
 }

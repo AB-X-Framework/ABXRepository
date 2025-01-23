@@ -5,6 +5,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.abx.repository.model.RepoConfig;
 import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.*;
@@ -15,6 +16,7 @@ import org.eclipse.jgit.util.FS;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -27,16 +29,37 @@ public class GitRepositoryEngine implements RepositoryEngine {
     private final static String Passphrase = "passphrase";
     private String dir;
 
+    @Override
     public void setDir(String dir) {
         this.dir = dir;
     }
 
-    public String rebuild(RepoConfig config) {
+    @Override
+    public String reset(RepoConfig config) {
         File root = new File(dir + "/" + config.user + "/" + config.name);
-        if (!RepositoryEngine.deleteFolder(root)) {
-            return "Unable to delete folder " + root.getAbsolutePath();
+        if (!root.exists()) {
+            root.mkdirs();
+            return clone(config);
         }
-        return clone(config);
+        try {
+            Git git = Git.open(root);
+            git.reset().setMode(ResetCommand.ResetType.HARD) // Hard reset: working directory and index reset to HEAD
+                    .call();
+            String branch = git.getRepository().getBranch();
+            PullCommand pullCommand = git.pull();
+            pullCommand.setRemote("origin").setRemoteBranchName(branch);
+            setCreds(pullCommand, config);
+            // Execute the clone command
+            pullCommand.call();
+            // Close the repository
+            git.close();
+            return WorkingSince + new Date() + ".";
+        } catch (Exception e) {
+            if (!RepositoryEngine.deleteFolder(root)) {
+                return "Unable to delete folder " + root.getAbsolutePath();
+            }
+            return clone(config);
+        }
     }
 
     /**
@@ -45,8 +68,8 @@ public class GitRepositoryEngine implements RepositoryEngine {
      * @param config
      * @throws Exception
      */
+    @Override
     public String update(RepoConfig config) {
-
         // Create the clone command
         File root = new File(dir + "/" + config.user + "/" + config.name);
         if (!root.exists()) {
@@ -72,35 +95,39 @@ public class GitRepositoryEngine implements RepositoryEngine {
         String configBranch = config.creds.get(Branch);
 
         String branch = getCurrentBranch(root);
-        if (configBranch == null || configBranch.isEmpty() ||
-                configBranch.equals(branch)) {
+        if (configBranch == null || configBranch.isEmpty() || configBranch.equals(branch)) {
             return pull(root, config);
         } else {
             return setBranch(root, config);
         }
     }
 
+    @Override
     public String push(RepoConfig config) {
         throw new RuntimeException("push not implemented");
     }
 
-
-    public String rollback(RepoConfig config) {
-        throw new RuntimeException("rollback not implemented");
-    }
-
+    @Override
     public String rollbackFile(RepoConfig config, String file) {
         throw new RuntimeException("rollback not implemented");
     }
 
-    public String commit(RepoConfig config) {
-
-        throw new RuntimeException("rollback not implemented");
-    }
-
-    public List<String> diff(RepoConfig config) {
-
-        throw new RuntimeException("rollback not implemented");
+    @Override
+    public List<String> diff(RepoConfig config) throws Exception {
+        File root = new File(dir + "/" + config.user + "/" + config.name);
+        Git git = Git.open(root);
+        // Get the DiffCommand instance to compute differences
+        DiffCommand diffCommand = git.diff();
+        // Get all the differences between the working directory and the index (staging area)
+        List<DiffEntry> diffs = diffCommand.call();
+        // Get the list of file paths from the diffs
+        List<String> filePaths = new ArrayList<>();
+        // Loop through the DiffEntry list and extract the file paths
+        for (DiffEntry diffEntry : diffs) {
+            // You can use diffEntry.getNewPath() to get the path of the file in the current version
+            filePaths.add(diffEntry.getNewPath());
+        }
+        return filePaths;
     }
 
     private String pull(File repoDir, RepoConfig config) {
@@ -110,7 +137,6 @@ public class GitRepositoryEngine implements RepositoryEngine {
             String branch = git.getRepository().getBranch();
             PullCommand pullCommand = git.pull();
             pullCommand.setRemote("origin").setRemoteBranchName(branch);
-
             setCreds(pullCommand, config);
             // Execute the clone command
             pullCommand.call();
@@ -123,19 +149,14 @@ public class GitRepositoryEngine implements RepositoryEngine {
         }
     }
 
-
     private String setBranch(File repoDir, RepoConfig config) {
         try {
             String branch = config.creds.get(Branch);
             boolean create = !doesLocalBranchExist(repoDir, branch);
             Git git = Git.open(repoDir);
-            CheckoutCommand checkoutCommand = git.checkout().
-                    setName(branch);
+            CheckoutCommand checkoutCommand = git.checkout().setName(branch);
             if (create) {
-                checkoutCommand.
-                        setCreateBranch(true).
-                        setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
-                        .setStartPoint("origin/"+branch);
+                checkoutCommand.setCreateBranch(true).setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK).setStartPoint("origin/" + branch);
             }
             // Execute the clone command
             checkoutCommand.call();
@@ -148,13 +169,9 @@ public class GitRepositoryEngine implements RepositoryEngine {
         }
     }
 
-
     private String clone(RepoConfig config) {
         try {
-            CloneCommand cloneCommand = Git.cloneRepository()
-                    .setURI(config.url)
-                    .setRemote("origin")
-                    .setDirectory(new File(dir + "/" + config.user + "/" + config.name));
+            CloneCommand cloneCommand = Git.cloneRepository().setURI(config.url).setRemote("origin").setDirectory(new File(dir + "/" + config.user + "/" + config.name));
             setCreds(cloneCommand, config);
             // Execute the clone command
             Git git = cloneCommand.call();
@@ -170,8 +187,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
     private void setCreds(TransportCommand command, RepoConfig config) {
         Map<String, String> creds = config.creds;
         if (creds.containsKey(Username)) {
-            CredentialsProvider credsProvider = new UsernamePasswordCredentialsProvider
-                    (creds.get(Username), creds.get(Password));
+            CredentialsProvider credsProvider = new UsernamePasswordCredentialsProvider(creds.get(Username), creds.get(Password));
             command.setCredentialsProvider(credsProvider);
         } else if (creds.containsKey(Ssh)) {
             String privateKey = creds.get(Ssh);
@@ -260,4 +276,6 @@ public class GitRepositoryEngine implements RepositoryEngine {
             return false;  // If repository access fails, return false
         }
     }
+
+
 }
