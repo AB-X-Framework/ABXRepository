@@ -5,6 +5,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.abx.repository.model.RepoConfig;
 import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory;
@@ -17,7 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class GitRepositoryEngine implements RepositoryEngine {
     private final static String Username = "username";
@@ -98,7 +98,11 @@ public class GitRepositoryEngine implements RepositoryEngine {
     private String pull(File repoDir, RepoConfig config) {
         try {
             Git git = Git.open(repoDir);
+
+            String branch = git.getRepository().getBranch();
             PullCommand pullCommand = git.pull();
+            pullCommand.setRemote("origin").setRemoteBranchName(branch);
+
             setCreds(pullCommand, config);
             // Execute the clone command
             pullCommand.call();
@@ -114,10 +118,17 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     private String setBranch(File repoDir, RepoConfig config) {
         try {
+            String branch = config.creds.get(Branch);
+            boolean create = !doesLocalBranchExist(repoDir, branch);
             Git git = Git.open(repoDir);
             CheckoutCommand checkoutCommand = git.checkout().
-                    setCreateBranch(true).
-                    setName(config.creds.get(Branch));
+                    setName(branch);
+            if (create) {
+                checkoutCommand.
+                        setCreateBranch(true).
+                        setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
+                        .setStartPoint("origin/"+branch);
+            }
             // Execute the clone command
             checkoutCommand.call();
             // Close the repository
@@ -227,4 +238,18 @@ public class GitRepositoryEngine implements RepositoryEngine {
         }
     }
 
+    private boolean doesLocalBranchExist(File repoDir, String branchName) {
+        try {
+            // Initialize the repository
+            Git git = Git.open(repoDir);
+            Repository repository = git.getRepository();
+
+            // Check if the branch exists locally
+            Ref ref = repository.findRef("refs/heads/" + branchName);
+            return ref != null;  // Returns true if the branch exists, otherwise false
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;  // If repository access fails, return false
+        }
+    }
 }
