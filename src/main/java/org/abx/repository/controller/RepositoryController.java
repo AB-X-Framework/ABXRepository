@@ -253,11 +253,11 @@ public class RepositoryController {
     @RequestMapping(path = "/rollback")
     public boolean rollback(HttpServletRequest req,
                             @RequestParam String repository,
-                            @RequestParam String file) throws Exception {
+                            @RequestParam String files) throws Exception {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
                 getName()).get(repository);
         repoConfig.lastKnownStatus = "Rolling back";
-        reqs.add(new RepoReq("rollback", repoConfig,file));
+        reqs.add(new RepoReq("rollback", repoConfig,files));
         semaphore.release();
         return true;
     }

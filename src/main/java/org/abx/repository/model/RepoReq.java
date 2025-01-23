@@ -1,8 +1,13 @@
 package org.abx.repository.model;
 
+import org.json.JSONArray;
+
+import java.util.List;
+
 public class RepoReq {
     public String req;
-    public String file;
+    public String pushMessage;
+    public List<String> files;
     public RepoConfig config;
 
     public RepoReq(String req, RepoConfig config) {
@@ -13,7 +18,7 @@ public class RepoReq {
 
     public RepoReq(String req, RepoConfig config, String file) {
         this.req = req;
-        this.file = file;
+        this.files = (List) new JSONArray(file).toList();
         this.config = config;
     }
 }

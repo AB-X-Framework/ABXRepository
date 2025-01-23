@@ -8,7 +8,6 @@ public class RepoConfig {
     public String engine;
     public String url;
 
-    public String pushMessage;
     public Map<String, String> creds;
 
     public List<String> diff;
@@ -22,7 +21,6 @@ public class RepoConfig {
         valid = true;
         creds = new HashMap<>();
         diff = new ArrayList<>();
-        pushMessage ="push";
         branch = "";
     }
 

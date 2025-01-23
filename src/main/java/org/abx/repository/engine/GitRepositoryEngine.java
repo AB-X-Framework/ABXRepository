@@ -31,8 +31,8 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     @Override
     public String pull(RepoConfig config) {
-        Git git = null;
-        try {
+        File root = new File(dir + "/" + config.user + "/" + config.name);
+        try (Git git = Git.open(root)) {
             PullCommand pullCommand = git.pull();
             pullCommand.setRemote("origin").setRemoteBranchName(getCurrentBranch(git));
             setCreds(pullCommand, config);
@@ -40,10 +40,6 @@ public class GitRepositoryEngine implements RepositoryEngine {
             return WorkingSince + new Date();
         } catch (Exception e) {
             return "Error with Git: " + e.getMessage();
-        } finally {
-            if (git != null) {
-                git.close();
-            }
         }
     }
 
@@ -105,26 +101,22 @@ public class GitRepositoryEngine implements RepositoryEngine {
     }
 
     @Override
-    public String push(RepoConfig config) {
+    public String push(RepoConfig config, List<String> files, String pushMessage) {
         throw new RuntimeException("push not implemented");
     }
 
     @Override
-    public String rollbackFile(RepoConfig config, String file) {
+    public String rollbackFile(RepoConfig config, List<String> files) {
         File root = new File(dir + "/" + config.user + "/" + config.name);
-        Git git = null;
-        try {
-            git =Git.open(root);
+        try (Git git = Git.open(root)) {
             // Checkout the file to revert it to its state in HEAD
-            git.checkout()
-                    .addPath(file)
-                    .call();
+            CheckoutCommand checkoutCommand = git.checkout();
+            for (String fileName : files) {
+                checkoutCommand.addPath(fileName);
+            }
+            checkoutCommand.call();
         } catch (Exception e) {
             return "Error with Git: " + e.getMessage();
-        } finally {
-            if (git != null) {
-                git.close();
-            }
         }
         // Expecting git closed
         return diff(config);
@@ -132,9 +124,8 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     @Override
     public String diff(RepoConfig config) {
-        try {
-            File root = new File(dir + "/" + config.user + "/" + config.name);
-            Git git = Git.open(root);
+        File root = new File(dir + "/" + config.user + "/" + config.name);
+        try (Git git = Git.open(root)) {
             // Get the DiffCommand instance to compute differences
             DiffCommand diffCommand = git.diff();
             // Get all the differences between the working directory and the index (staging area)
@@ -146,7 +137,6 @@ public class GitRepositoryEngine implements RepositoryEngine {
                 // You can use diffEntry.getNewPath() to get the path of the file in the current version
                 filePaths.add(diffEntry.getNewPath());
             }
-            git.close();
             config.diff = filePaths;
             return WorkingSince + new Date() + ".";
         } catch (Exception e) {

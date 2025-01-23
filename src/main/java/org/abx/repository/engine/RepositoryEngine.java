@@ -35,9 +35,9 @@ public interface RepositoryEngine {
      */
     public String reset(RepoConfig config);
 
-    public String push(RepoConfig config);
+    public String push(RepoConfig config, List<String> paths, String comment);
 
-    public String rollbackFile(RepoConfig config, String path);
+    public String rollbackFile(RepoConfig config, List<String> paths);
 
     public String diff(RepoConfig config) ;
 

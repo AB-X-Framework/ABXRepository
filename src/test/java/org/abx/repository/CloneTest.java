@@ -155,7 +155,7 @@ public class CloneTest {
         req = servicesClient.post("repository", "/repository/rollback");
         req.jwt(token);
         req.addPart("repository",repositoryName);
-        req.addPart("file",filename);
+        req.addPart("files",new JSONArray().put(filename).toString());
         resp= servicesClient.process(req);
         System.out.println(resp.asString());
         Assertions.assertTrue(resp.asBoolean());
