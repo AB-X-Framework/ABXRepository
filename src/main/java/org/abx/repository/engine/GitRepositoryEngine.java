@@ -20,7 +20,7 @@ import java.util.*;
 public class GitRepositoryEngine implements RepositoryEngine {
     private final static String Username = "username";
     private final static String Password = "password";
-    private final static String Ssh = "ssh";
+    public final static String Ssh = "ssh";
     private final static String Passphrase = "passphrase";
     private String dir;
 
@@ -214,7 +214,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
             } else {
                 passphraseBytes = null;
             }
-            SshSessionFactory sshSessionFactory = new JschConfigSessionFactory() {
+                SshSessionFactory sshSessionFactory = new JschConfigSessionFactory() {
                 @Override
                 protected void configure(OpenSshConfig.Host hc, Session session) {
                     // Additional configurations if needed
@@ -223,26 +223,15 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
                 @Override
                 protected JSch createDefaultJSch(FS fs) throws JSchException {
-                    JSch jsch = super.createDefaultJSch(fs);
+                    JSch jsch = new JSch();
                     jsch.addIdentity("keyIdentifier", privateKeyBytes, null, passphraseBytes); // `null` for no passphrase or public key
-                    return jsch;
+
+                   return jsch;
                 }
             };
             command.setTransportConfigCallback(transport -> {
                 if (transport instanceof SshTransport sshTransport) {
                     sshTransport.setSshSessionFactory(sshSessionFactory);
-                }
-            });
-        } else if (config.url.startsWith("git")) {
-            command.setTransportConfigCallback(transport -> {
-                if (transport instanceof SshTransport sshTransport) {
-                    sshTransport.setSshSessionFactory(new JschConfigSessionFactory() {
-                        @Override
-                        protected void configure(OpenSshConfig.Host hc, Session session) {
-                            // Additional configurations if needed
-                            session.setConfig("StrictHostKeyChecking", "no");
-                        }
-                    });
                 }
             });
         }

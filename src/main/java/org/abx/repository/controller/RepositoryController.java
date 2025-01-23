@@ -276,4 +276,19 @@ public class RepositoryController {
         semaphore.release();
         return true;
     }
+
+    @RequestMapping(path = "/push")
+    public boolean push(HttpServletRequest req,
+                            @RequestParam String repository,
+                            @RequestParam String pushMessage,
+                            @RequestParam String files) throws Exception {
+        RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
+                getName()).get(repository);
+        repoConfig.lastKnownStatus = "Pushing";
+        RepoReq repoReq = new RepoReq("push", repoConfig, files);
+        repoReq.pushMessage = pushMessage;
+        reqs.add(repoReq);
+        semaphore.release();
+        return true;
+    }
 }
