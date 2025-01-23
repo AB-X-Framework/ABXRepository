@@ -11,7 +11,7 @@
 
     <repositories>
         <repository>
-            <id>github-WSArch</id>
+            <id>github-ABXUSArch</id>
             <url>https://maven.pkg.github.com/AB-X-Framework/WSArch</url>
             <snapshots>
                 <enabled>true</enabled>
@@ -64,4 +64,12 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <repository>
+            <id>github-ABXRepository</id>
+            <name>GitHub OWNER Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/AB-X-Framework/ABXRepository</url>
+        </repository>
+    </distributionManagement>
 </project>
