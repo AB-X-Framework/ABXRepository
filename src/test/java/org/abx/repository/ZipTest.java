@@ -70,7 +70,7 @@ public class ZipTest {
             resp = servicesClient.process(req);
             JSONObject jsonObject = resp.asJSONObject();
             System.out.println(jsonObject.toString());
-            status = jsonObject.getJSONObject("repo").getString("status");
+            status = jsonObject.getJSONObject(repositoryName).getString("status");
             if (status.startsWith(WorkingSince)) {
                 working = true;
                 break;
@@ -82,10 +82,9 @@ public class ZipTest {
 
         req = servicesClient.post("repository", "/repository/zip");
         req.jwt(token);
-        req.addPart("path", repositoryName+"/zip");
+        req.addPart("path", "/" + repositoryName + "/zip");
         resp = servicesClient.process(req);
-        ZipInputStream zip = new ZipInputStream(resp.asStream());
-        extractZipToFolder(zip, "zipFolder");
+        extractZipToFolder(resp.asStream(), "zipFolder");
         Assertions.assertEquals("top", StreamUtils.readStream(
                 new FileInputStream("zipFolder/top.txt")));
         Assertions.assertEquals("inner", StreamUtils.readStream(

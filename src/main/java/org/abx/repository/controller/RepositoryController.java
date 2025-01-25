@@ -301,19 +301,19 @@ public class RepositoryController {
 
 
     @Secured("repository")
-    @GetMapping("/zip")
+    @RequestMapping("/zip")
     public ResponseEntity<StreamingResponseBody> zip(HttpServletRequest req,
                                                                    @RequestParam String path) {
+        String username = req.getUserPrincipal().getName();
         String repository = path.substring(1, path.indexOf('/', 1));
-        RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
-                getName()).get(repository);
+        RepoConfig repoConfig = configHolder.get(username).get(repository);
         if (!repoConfig.valid) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(outputStream -> {
                         outputStream.write("Invalid repository".getBytes());
                     });
         }
-        File folder = new File(path);
+        File folder = new File(dir+"/"+username+"/"+path);
         if (!folder.exists()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(outputStream -> {
