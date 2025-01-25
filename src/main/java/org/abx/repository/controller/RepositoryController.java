@@ -15,11 +15,13 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.*;
 import java.util.Arrays;
@@ -28,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping("/repository")
@@ -57,7 +61,6 @@ public class RepositoryController {
     public void init() {
         new File(dir).mkdirs();
         repositoryProcessor = new RepositoryProcessor(dir, this);
-
         repositoryProcessor.start();
     }
 
@@ -235,6 +238,7 @@ public class RepositoryController {
      * @return the last know diff
      * @throws Exception Not found
      */
+    @Secured("repository")
     @GetMapping(path = "/diff", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> diff(HttpServletRequest req,
                              @RequestParam("repository") String repository) throws Exception {
@@ -243,6 +247,7 @@ public class RepositoryController {
 
     }
 
+    @Secured("repository")
     @GetMapping(path = "/remove")
     public boolean remove(HttpServletRequest req,
                           @RequestParam("repository") String repository) throws Exception {
@@ -265,6 +270,7 @@ public class RepositoryController {
         configHolder.get(username).remove(configname);
     }
 
+    @Secured("repository")
     @RequestMapping(path = "/rollback")
     public boolean rollback(HttpServletRequest req,
                             @RequestParam String repository,
@@ -277,11 +283,12 @@ public class RepositoryController {
         return true;
     }
 
+    @Secured("repository")
     @RequestMapping(path = "/push")
     public boolean push(HttpServletRequest req,
-                            @RequestParam String repository,
-                            @RequestParam String pushMessage,
-                            @RequestParam String files) throws Exception {
+                        @RequestParam String repository,
+                        @RequestParam String pushMessage,
+                        @RequestParam String files) throws Exception {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
                 getName()).get(repository);
         repoConfig.lastKnownStatus = "Pushing";
@@ -290,5 +297,67 @@ public class RepositoryController {
         reqs.add(repoReq);
         semaphore.release();
         return true;
+    }
+
+
+    @Secured("repository")
+    @GetMapping("/zip")
+    public ResponseEntity<StreamingResponseBody> zip(HttpServletRequest req,
+                                                                   @RequestParam String path) {
+        String repository = path.substring(1, path.indexOf('/', 1));
+        RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
+                getName()).get(repository);
+        if (!repoConfig.valid) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(outputStream -> {
+                        outputStream.write("Invalid repository".getBytes());
+                    });
+        }
+        File folder = new File(path);
+        if (!folder.exists()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(outputStream -> {
+                        outputStream.write("Invalid folder path!".getBytes());
+                    });
+        }
+        StreamingResponseBody responseBody = outputStream -> {
+            try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
+                // Write folder entries to the ZipOutputStream dynamically
+                addFolderToZip(zos, folder, folder.getName());
+            }
+        };
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""+
+                folder.getName()+".zip\"");
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
+        return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+    }
+
+    private void addFolderToZip(ZipOutputStream zos, File folder, String basePath) throws IOException {
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return; // Empty folder or I/O error
+        }
+        for (File file : files) {
+            String entryName = basePath + "/" + file.getName();
+            if (file.isDirectory()) {
+                // Add directory entry
+                zos.putNextEntry(new ZipEntry(entryName + "/"));
+                zos.closeEntry();
+                // Recursively add subfolder contents
+                addFolderToZip(zos, file, entryName);
+            } else {
+                // Add file entry
+                try (FileInputStream fis = new FileInputStream(file)) {
+                    zos.putNextEntry(new ZipEntry(entryName));
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = fis.read(buffer)) > 0) {
+                        zos.write(buffer, 0, length);
+                    }
+                    zos.closeEntry();
+                }
+            }
+        }
     }
 }
