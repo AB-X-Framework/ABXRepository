@@ -6,6 +6,7 @@ import org.abx.services.ServiceRequest;
 import org.abx.services.ServiceResponse;
 import org.abx.services.ServicesClient;
 import org.abx.util.StreamUtils;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,48 +48,52 @@ public class ZipTest {
 
     @Test
     public void doTest() throws Exception {
-        String repositoryName = "ziprepo";
-        String token = JWTUtils.generateToken("dummy", privateKey, 60,
-                List.of("repository"));
+        try {
+            String repositoryName = "ziprepo";
+            String token = JWTUtils.generateToken("dummy", privateKey, 60,
+                    List.of("repository"));
 
-        ServiceRequest req = servicesClient.post("repository", "/repository/update");
-        req.jwt(token);
-        req.addPart("engine", "git");
-        req.addPart("name", repositoryName);
-        req.addPart("url", "git@github.com:luislara/editRepo.git");
-        String key = StreamUtils.readStream(new FileInputStream("C:/Users/l3cla/.ssh/id_rsa"));
-        req.addPart("creds", new JSONObject().put(Ssh, key).toString());
-        req.addPart("branch", "");
-        ServiceResponse resp = servicesClient.process(req);
-        Assertions.assertEquals(200, resp.statusCode());
-
-        boolean working = false;
-        String status = null;
-        for (int i = 0; i < 10; ++i) {
-            req = servicesClient.get("repository", "/repository/status");
+            ServiceRequest req = servicesClient.post("repository", "/repository/update");
             req.jwt(token);
-            resp = servicesClient.process(req);
-            JSONObject jsonObject = resp.asJSONObject();
-            System.out.println(jsonObject.toString());
-            status = jsonObject.getJSONObject(repositoryName).getString("status");
-            if (status.startsWith(WorkingSince)) {
-                working = true;
-                break;
+            req.addPart("engine", "git");
+            req.addPart("name", repositoryName);
+            req.addPart("url", "git@github.com:luislara/editRepo.git");
+            String key = StreamUtils.readStream(new FileInputStream("C:/Users/l3cla/.ssh/id_rsa"));
+            req.addPart("creds", new JSONObject().put(Ssh, key).toString());
+            req.addPart("branch", "");
+            ServiceResponse resp = servicesClient.process(req);
+            Assertions.assertEquals(200, resp.statusCode());
+
+            boolean working = false;
+            String status = null;
+            for (int i = 0; i < 10; ++i) {
+                req = servicesClient.get("repository", "/repository/status");
+                req.jwt(token);
+                resp = servicesClient.process(req);
+                JSONObject jsonObject = resp.asJSONObject();
+                System.out.println(jsonObject.toString());
+                status = jsonObject.getJSONObject(repositoryName).getString("status");
+                if (status.startsWith(WorkingSince)) {
+                    working = true;
+                    break;
+                }
+                Thread.sleep(1000);
             }
-            Thread.sleep(1000);
+            Assertions.assertTrue(working, status);
+
+
+            req = servicesClient.post("repository", "/repository/zip");
+            req.jwt(token);
+            req.addPart("path", "/" + repositoryName + "/zip");
+            resp = servicesClient.process(req);
+            extractZipToFolder(resp.asStream(), "zipFolder");
+            Assertions.assertEquals("top", StreamUtils.readStream(
+                    new FileInputStream("zipFolder/top.txt")));
+            Assertions.assertEquals("inner", StreamUtils.readStream(
+                    new FileInputStream("zipFolder/inner/inner.txt")));
+        }finally {
+            FileUtils.deleteDirectory(new File("zipFolder"));
         }
-        Assertions.assertTrue(working, status);
-
-
-        req = servicesClient.post("repository", "/repository/zip");
-        req.jwt(token);
-        req.addPart("path", "/" + repositoryName + "/zip");
-        resp = servicesClient.process(req);
-        extractZipToFolder(resp.asStream(), "zipFolder");
-        Assertions.assertEquals("top", StreamUtils.readStream(
-                new FileInputStream("zipFolder/top.txt")));
-        Assertions.assertEquals("inner", StreamUtils.readStream(
-                new FileInputStream("zipFolder/inner/inner.txt")));
     }
 
     public static void extractZipToFolder(InputStream zipInputStream, String targetFolderPath)

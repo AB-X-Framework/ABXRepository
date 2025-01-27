@@ -323,7 +323,7 @@ public class RepositoryController {
         StreamingResponseBody responseBody = outputStream -> {
             try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
                 // Write folder entries to the ZipOutputStream dynamically
-                addFolderToZip(zos, folder, folder.getName());
+                addFolderToZip(zos, folder, "");
             }
         };
         HttpHeaders headers = new HttpHeaders();
