@@ -43,7 +43,7 @@ public class PushTest {
 
     @Test
     public void doTest() throws Exception {
-        String repositoryName = "repo";
+        String repositoryName = "repo2";
         String token = JWTUtils.generateToken("dummy", privateKey, 60,
                 List.of("repository"));
 
@@ -51,7 +51,7 @@ public class PushTest {
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
-        req.addPart("url", "git@github.com:luislara/editRepo.git");
+        req.addPart("url", "git@github.com:AB-X-Framework/editRepo.git");
         String key = StreamUtils.readStream(new FileInputStream("C:/Users/l3cla/.ssh/id_rsa"));
         req.addPart("creds", new JSONObject().put(Ssh, key).toString());
         req.addPart("branch", "");

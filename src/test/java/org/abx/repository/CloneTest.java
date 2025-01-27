@@ -63,7 +63,7 @@ public class CloneTest {
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
-        req.addPart("url", "https://github.com/luislara/simplerepo.git");
+        req.addPart("url", "https://github.com/AB-X-Framework/simplerepo.git");
         req.addPart("creds", "{}");
         req.addPart("branch", "");
         resp = servicesClient.process(req);
@@ -116,7 +116,7 @@ public class CloneTest {
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
-        req.addPart("url", "https://github.com/luislara/simplerepo.git");
+        req.addPart("url", "https://github.com/AB-X-Framework/simplerepo.git");
         req.addPart("branch", "super");
         req.addPart("creds", "{}");
         req.jwt(token);
@@ -191,7 +191,7 @@ public class CloneTest {
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
-        req.addPart("url", "https://github.com/luislara/superrepo.git");
+        req.addPart("url", "https://github.com/AB-X-Framework/superrepo.git");
         req.addPart("creds", "{}");
         req.addPart("branch", "");
         resp = servicesClient.process(req);
