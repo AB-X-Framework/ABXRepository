@@ -18,7 +18,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.io.FileInputStream;
 import java.util.List;
 
-import static org.abx.repository.controller.RepositoryController.Initializing;
 import static org.abx.repository.engine.GitRepositoryEngine.Ssh;
 import static org.abx.repository.engine.RepositoryEngine.WorkingSince;
 
@@ -51,7 +50,7 @@ public class PushTest {
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("name", repositoryName);
-        req.addPart("url", "git@github.com:AB-X-Framework/editRepo.git");
+        req.addPart("url", "git@github.com:AB-X-Framework/git-editRepo.git");
         String key = StreamUtils.readStream(new FileInputStream("C:/Users/l3cla/.ssh/id_rsa"));
         req.addPart("creds", new JSONObject().put(Ssh, key).toString());
         req.addPart("branch", "");

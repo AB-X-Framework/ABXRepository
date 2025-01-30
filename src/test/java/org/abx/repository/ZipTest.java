@@ -8,23 +8,21 @@ import org.abx.services.ServicesClient;
 import org.abx.util.StreamUtils;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.json.JSONObject;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static org.abx.repository.engine.GitRepositoryEngine.Ssh;
 import static org.abx.repository.engine.RepositoryEngine.WorkingSince;
 
 @SpringBootTest(classes = ABXRepositoryEntry.class)
@@ -56,10 +54,9 @@ public class ZipTest {
             req.jwt(token);
             req.addPart("engine", "git");
             req.addPart("name", repositoryName);
-            req.addPart("url", "git@github.com:AB-X-Framework/editRepo.git");
-            String key = StreamUtils.readStream(new FileInputStream("C:/Users/l3cla/.ssh/id_rsa"));
-            req.addPart("creds", new JSONObject().put(Ssh, key).toString());
+            req.addPart("url", "https://github.com/AB-X-Framework/git-editRepo.git");
             req.addPart("branch", "");
+            req.addPart("creds", "{}");
             ServiceResponse resp = servicesClient.process(req);
             Assertions.assertEquals(200, resp.statusCode());
 
