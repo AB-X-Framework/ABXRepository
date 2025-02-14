@@ -1,5 +1,6 @@
 package org.abx.repository.spring;
 
+import org.abx.spring.ConfigReader;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -12,8 +13,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         "org.abx.repository.controller"})
 public class ABXRepositoryEntry {
 
-    public static void main(String[] args) {
-        SpringApplication.run(ABXRepositoryEntry.class, args);
+    public static void main(String[] args) throws Exception {
+        SpringApplication.run(ABXRepositoryEntry.class, ConfigReader.checkArgs( args));
     }
 
 }
