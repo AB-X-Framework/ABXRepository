@@ -44,7 +44,7 @@ public class CloneTest {
     public void doTest() throws Exception {
         String repositoryName = "repo";
         String token = JWTUtils.generateToken("dummy", privateKey, 60,
-                List.of("repository"));
+                List.of("Repository"));
 
         ServiceRequest req = servicesClient.get("repository", "/repository/status");
         req.jwt(token);

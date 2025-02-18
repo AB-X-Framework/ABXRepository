@@ -64,7 +64,7 @@ public class RepositoryController {
         repositoryProcessor.start();
     }
 
-    @Secured("repository")
+    @Secured("Repository")
     @RequestMapping(value = "/update")
     public boolean update(HttpServletRequest request,
                           @RequestParam String engine,
@@ -105,7 +105,7 @@ public class RepositoryController {
     }
 
 
-    @Secured("repository")
+    @Secured("Repository")
     @RequestMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Map<String, String>> status(HttpServletRequest request) {
         UserRepoConfig userConfig = configHolder.get(request.getUserPrincipal().getName());
@@ -163,7 +163,7 @@ public class RepositoryController {
     }
 
 
-    @Secured("repository")
+    @Secured("Repository")
     @GetMapping(path = "/details", produces = "application/json")
     public String details(HttpServletRequest req, @RequestParam(name = "id", required = false) String id) throws Exception {
         String username = req.getUserPrincipal().getName();
@@ -189,7 +189,7 @@ public class RepositoryController {
         }
     }
 
-    @Secured("repository")
+    @Secured("Repository")
     @GetMapping("/data")
     public ResponseEntity<InputStreamResource> data(HttpServletRequest req, @RequestParam String path) throws Exception {
         File workingFile = new File(dir + "/" +
@@ -206,7 +206,7 @@ public class RepositoryController {
                 .body(new InputStreamResource(new FileInputStream(workingFile)));
     }
 
-    @Secured("repository")
+    @Secured("Repository")
     @PostMapping("/upload")
     public boolean upload(HttpServletRequest req,
                           @RequestParam("path") String path,
@@ -238,7 +238,7 @@ public class RepositoryController {
      * @return the last know diff
      * @throws Exception Not found
      */
-    @Secured("repository")
+    @Secured("Repository")
     @GetMapping(path = "/diff", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> diff(HttpServletRequest req,
                              @RequestParam("repository") String repository) throws Exception {
@@ -247,7 +247,7 @@ public class RepositoryController {
 
     }
 
-    @Secured("repository")
+    @Secured("Repository")
     @GetMapping(path = "/remove")
     public boolean remove(HttpServletRequest req,
                           @RequestParam("repository") String repository) throws Exception {
@@ -270,7 +270,7 @@ public class RepositoryController {
         configHolder.get(username).remove(configname);
     }
 
-    @Secured("repository")
+    @Secured("Repository")
     @RequestMapping(path = "/rollback")
     public boolean rollback(HttpServletRequest req,
                             @RequestParam String repository,
@@ -283,7 +283,7 @@ public class RepositoryController {
         return true;
     }
 
-    @Secured("repository")
+    @Secured("Repository")
     @RequestMapping(path = "/push")
     public boolean push(HttpServletRequest req,
                         @RequestParam String repository,
@@ -300,7 +300,7 @@ public class RepositoryController {
     }
 
 
-    @Secured("repository")
+    @Secured("Repository")
     @RequestMapping("/zip")
     public ResponseEntity<StreamingResponseBody> zip(HttpServletRequest req,
                                                                    @RequestParam String path) {

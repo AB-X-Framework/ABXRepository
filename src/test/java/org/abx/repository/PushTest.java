@@ -44,7 +44,7 @@ public class PushTest {
     public void doTest() throws Exception {
         String repositoryName = "repo2";
         String token = JWTUtils.generateToken("dummy", privateKey, 60,
-                List.of("repository"));
+                List.of("Repository"));
 
         ServiceRequest req = servicesClient.post("repository", "/repository/update");
         req.jwt(token);
