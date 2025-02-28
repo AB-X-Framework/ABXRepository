@@ -43,7 +43,7 @@ public class LocalRepoTest {
     @Test
     public void doTest() throws Exception {
         String repositoryName = "repo";
-        String token = JWTUtils.generateToken("dummy", privateKey, 60,
+        String token = JWTUtils.generateToken("Localuser", privateKey, 60,
                 List.of("Repository"));
 
         ServiceRequest req = servicesClient.get("repository", "/repository/status");

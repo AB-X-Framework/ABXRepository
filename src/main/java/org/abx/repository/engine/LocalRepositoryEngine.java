@@ -43,6 +43,11 @@ public class LocalRepositoryEngine implements RepositoryEngine {
      */
     @Override
     public String reset(RepoConfig config) {
+        File root = new File(dir + "/" + config.user + "/" + config.name);
+        if (!root.exists()) {
+            root.mkdirs();
+        }
+
         return WorkingSince + new Date()+ ".";
     }
 
