@@ -360,4 +360,12 @@ public class RepositoryController {
             }
         }
     }
+
+    @Secured("Persistence")
+    @PostMapping(value = "/repository/validate/password", produces = MediaType.APPLICATION_JSON_VALUE)
+    public static boolean validateCreds(
+            @RequestParam String repoConfig) {
+
+        throw new RuntimeException("NOD DONE");
+    }
 }

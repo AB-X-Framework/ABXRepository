@@ -12,11 +12,21 @@ public class RepositoryProcessor extends Thread {
     private final RepositoryController controller;
 
     private final GitRepositoryEngine gitEngine;
-    public RepositoryProcessor(String dir,RepositoryController controller) {
+
+    public RepositoryProcessor(String dir, RepositoryController controller) {
         this.dir = dir;
         this.controller = controller;
         gitEngine = new GitRepositoryEngine();
         gitEngine.setDir(dir);
+    }
+
+    public boolean validate(RepoConfig config) {
+        try {
+            RepositoryEngine engine = getEngine(config.engine);
+            return engine.validate(config);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -41,29 +51,29 @@ public class RepositoryProcessor extends Thread {
                 config.lastKnownStatus = engine.pull(config);
                 break;
             case "rollback":
-                config.lastKnownStatus = engine.rollbackFile(config,repoReq.files);
+                config.lastKnownStatus = engine.rollbackFile(config, repoReq.files);
                 break;
             case "reset":
                 config.lastKnownStatus = engine.reset(config);
                 break;
             case "push":
-                config.lastKnownStatus =  engine.push(config,repoReq.files,repoReq.pushMessage);
+                config.lastKnownStatus = engine.push(config, repoReq.files, repoReq.pushMessage);
                 break;
             case "replace":
-                config.engine=config.updatedConfig.engine;
+                config.engine = config.updatedConfig.engine;
                 config.url = config.updatedConfig.url;
-                config.branch=config.updatedConfig.branch;
+                config.branch = config.updatedConfig.branch;
                 config.creds = config.updatedConfig.creds;
-                config.lastKnownStatus =  engine.reset(config);
+                config.lastKnownStatus = engine.reset(config);
                 break;
             case "diff":
-                config.lastKnownStatus =  engine.diff(config);
+                config.lastKnownStatus = engine.diff(config);
                 break;
             case "remove":
                 File root = new File(dir + "/" + config.user + "/" + config.name);
-                if (RepositoryEngine.deleteFolder(root)){
+                if (RepositoryEngine.deleteFolder(root)) {
                     controller.dispose(config.user, config.name);
-                }else {
+                } else {
                     config.lastKnownStatus = "Cannot delete repository.";
                 }
                 break;

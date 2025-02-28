@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class GitRepositoryEngine implements RepositoryEngine {
+    private final static String Public = "public";
     private final static String Username = "username";
     private final static String Password = "password";
     public final static String Ssh = "ssh";
@@ -203,6 +204,23 @@ public class GitRepositoryEngine implements RepositoryEngine {
         }
     }
 
+
+    public boolean validate(RepoConfig repoConfig) {
+        LsRemoteCommand command = Git.lsRemoteRepository()
+                .setRemote(repoConfig.url);
+        setCreds(command, repoConfig);
+        String branchName = repoConfig.branch;
+        try {
+            Collection<Ref> refs = command.call();
+            if (branchName.isBlank()) {
+                return true;
+            }
+            return refs.stream().anyMatch(ref -> ref.getName().endsWith("/" + branchName));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private void setCreds(TransportCommand command, RepoConfig config) {
         Map<String, String> creds = config.creds;
         if (creds.containsKey(Username)) {
@@ -217,7 +235,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
             } else {
                 passphraseBytes = null;
             }
-                SshSessionFactory sshSessionFactory = new JschConfigSessionFactory() {
+            SshSessionFactory sshSessionFactory = new JschConfigSessionFactory() {
                 @Override
                 protected void configure(OpenSshConfig.Host hc, Session session) {
                     // Additional configurations if needed
@@ -229,7 +247,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
                     JSch jsch = new JSch();
                     jsch.addIdentity("keyIdentifier", privateKeyBytes, null, passphraseBytes); // `null` for no passphrase or public key
 
-                   return jsch;
+                    return jsch;
                 }
             };
             command.setTransportConfigCallback(transport -> {
