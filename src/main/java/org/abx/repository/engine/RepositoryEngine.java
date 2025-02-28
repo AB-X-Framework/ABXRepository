@@ -27,7 +27,6 @@ public interface RepositoryEngine {
     }
 
     String WorkingSince = "Working. Last update at: ";
-    String IssueWithGit = "Issue with Git: ";
 
     void setDir(String dir);
 

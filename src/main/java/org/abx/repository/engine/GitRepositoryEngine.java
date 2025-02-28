@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class GitRepositoryEngine implements RepositoryEngine {
+    String IssueWithGit = "Issue with Git: ";
     private final static String Public = "public";
     private final static String Username = "username";
     private final static String Password = "password";
@@ -205,6 +206,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
     }
 
 
+    @Override
     public boolean validate(RepoConfig repoConfig) {
         LsRemoteCommand command = Git.lsRemoteRepository()
                 .setRemote(repoConfig.url);
@@ -258,7 +260,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
         }
     }
 
-    public static String getRemoteUri(Git git) throws Exception {
+    private String getRemoteUri(Git git) throws Exception {
         Repository repository = git.getRepository();
         // Retrieve the remote configuration for the specified remote
         List<RemoteConfig> remoteConfigs = RemoteConfig.getAllRemoteConfigs(repository.getConfig());
@@ -271,14 +273,14 @@ public class GitRepositoryEngine implements RepositoryEngine {
         return "";
     }
 
-    public static String getCurrentBranch(Git git) throws Exception {
+    private String getCurrentBranch(Git git) throws Exception {
         Repository repository = git.getRepository();
         // Return the current branch
         return repository.getBranch();
     }
 
 
-    public static String getDefaultBranch(Repository repository) throws Exception {
+    private String getDefaultBranch(Repository repository) throws Exception {
         List<RemoteConfig> remotes = RemoteConfig.getAllRemoteConfigs(repository.getConfig());
         for (RemoteConfig remote : remotes) {
             if ("origin".equals(remote.getName())) { // Check if it's the 'origin' remote
