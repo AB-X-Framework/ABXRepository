@@ -1,6 +1,7 @@
 package org.abx.repository.controller;
 
 import org.abx.repository.engine.GitRepositoryEngine;
+import org.abx.repository.engine.LocalRepositoryEngine;
 import org.abx.repository.engine.RepositoryEngine;
 import org.abx.repository.model.RepoConfig;
 import org.abx.repository.model.RepoReq;
@@ -12,12 +13,15 @@ public class RepositoryProcessor extends Thread {
     private final RepositoryController controller;
 
     private final GitRepositoryEngine gitEngine;
+    private final LocalRepositoryEngine localEngine;
 
     public RepositoryProcessor(String dir, RepositoryController controller) {
         this.dir = dir;
         this.controller = controller;
         gitEngine = new GitRepositoryEngine();
         gitEngine.setDir(dir);
+        localEngine = new LocalRepositoryEngine();
+        localEngine.setDir(dir);
     }
 
     public boolean validate(RepoConfig config) {
@@ -84,6 +88,8 @@ public class RepositoryProcessor extends Thread {
         switch (engine) {
             case "git":
                 return gitEngine;
+            case "local":
+                return localEngine;
             default:
                 throw new Exception("Unknown engine " + engine);
         }

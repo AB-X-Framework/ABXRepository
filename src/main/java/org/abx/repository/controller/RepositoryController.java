@@ -3,12 +3,10 @@ package org.abx.repository.controller;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
-import org.abx.repository.engine.RepositoryEngine;
 import org.abx.repository.model.ConfigHolder;
 import org.abx.repository.model.RepoConfig;
 import org.abx.repository.model.RepoReq;
 import org.abx.repository.model.UserRepoConfig;
-import org.abx.util.Pair;
 import org.abx.util.StreamUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -361,11 +359,20 @@ public class RepositoryController {
         }
     }
 
-    @Secured("Persistence")
-    @PostMapping(value = "/repository/validate/password", produces = MediaType.APPLICATION_JSON_VALUE)
-    public static boolean validateCreds(
-            @RequestParam String repoConfig) {
-
-        throw new RuntimeException("NOD DONE");
+    @Secured("Repository")
+    @PostMapping(value = "/validate", produces = MediaType.APPLICATION_JSON_VALUE)
+    public boolean validateCreds(
+            @RequestParam String url, @RequestParam String branch,
+            @RequestParam String engine,   @RequestParam String creds) {
+        RepoConfig repoConfig = new RepoConfig();
+        repoConfig.lastKnownStatus = Initializing;
+        repoConfig.url = url;
+        repoConfig.branch = branch;
+        repoConfig.engine = engine;
+        JSONObject jsonCreds = new JSONObject(creds);
+        for (String key : jsonCreds.keySet()) {
+            repoConfig.creds.put(key, jsonCreds.getString(key));
+        }
+        return repositoryProcessor.validate(repoConfig);
     }
 }
