@@ -245,11 +245,11 @@ public class RepositoryController {
     }
 
     @Secured("Repository")
-    @GetMapping(path = "/remove")
+    @GetMapping(path = "/remove/{repositoryName}")
     public boolean remove(HttpServletRequest req,
-                          @RequestParam("repository") String repository) throws Exception {
+                          @PathVariable String repositoryName) {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
-                getName()).get(repository);
+                getName()).get(repositoryName);
         repoConfig.lastKnownStatus = "Deleting";
         repoConfig.valid = false;
         reqs.add(new RepoReq("remove", repoConfig));
@@ -261,10 +261,10 @@ public class RepositoryController {
      * Disposes file
      *
      * @param username
-     * @param configname
+     * @param repositoryName
      */
-    protected void dispose(String username, String configname) {
-        configHolder.get(username).remove(configname);
+    protected void dispose(String username, String repositoryName) {
+        configHolder.get(username).remove(repositoryName);
     }
 
     @Secured("Repository")
