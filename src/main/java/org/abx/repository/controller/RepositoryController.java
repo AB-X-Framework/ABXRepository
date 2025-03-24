@@ -281,13 +281,13 @@ public class RepositoryController {
     }
 
     @Secured("Repository")
-    @RequestMapping(path = "/push")
+    @RequestMapping(path = "/push/{repositoryName}")
     public boolean push(HttpServletRequest req,
-                        @RequestParam String repository,
+                        @PathVariable String repositoryName,
                         @RequestParam String pushMessage,
                         @RequestParam String files) throws Exception {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
-                getName()).get(repository);
+                getName()).get(repositoryName);
         repoConfig.lastKnownStatus = "Pushing";
         RepoReq repoReq = new RepoReq("push", repoConfig, files);
         repoReq.pushMessage = pushMessage;
