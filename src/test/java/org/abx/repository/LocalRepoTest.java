@@ -42,7 +42,7 @@ public class LocalRepoTest {
 
     @Test
     public void doTest() throws Exception {
-        String repositoryName = "repo";
+        String repoName = "repo";
         String token = JWTUtils.generateToken("Localuser", privateKey, 60,
                 List.of("Repository"));
 
@@ -59,7 +59,7 @@ public class LocalRepoTest {
         JSONArray jsonArray = resp.asJSONArray();
         Assertions.assertTrue(jsonArray.isEmpty());
 
-        req = servicesClient.post("repository", "/repository/update/"+repositoryName);
+        req = servicesClient.post("repository", "/repository/update/"+repoName);
         req.jwt(token);
         req.addPart("engine", "local");
         req.addPart("url", "");
@@ -106,7 +106,7 @@ public class LocalRepoTest {
         System.out.println(resp.asJSONArray());
 
         String filename = "README.md";
-        String path = "/" + repositoryName + "/" + filename;
+        String path = "/" + repoName + "/" + filename;
 
         req = servicesClient.post("repository", "/repository/upload");
         req.jwt(token);

@@ -31,7 +31,7 @@ public class LocalRepositoryEngine implements RepositoryEngine {
      */
     @Override
     public String reset(RepoConfig config) {
-        File root = new File(dir + "/" + config.user + "/" + config.repositoryName);
+        File root = new File(dir + "/" + config.user + "/" + config.repoName);
         if (!root.exists()) {
             root.mkdirs();
         }

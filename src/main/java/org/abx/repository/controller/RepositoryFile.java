@@ -4,11 +4,11 @@ import org.abx.util.Pair;
 
 public class RepositoryFile  {
 
-    String repositoryName;
+    String repoName;
     String path;
 
-    public RepositoryFile(String repositoryName, String path) {
-        this.repositoryName = repositoryName;
+    public RepositoryFile(String repoName, String path) {
+        this.repoName = repoName;
         this.path = path;
     }
 }

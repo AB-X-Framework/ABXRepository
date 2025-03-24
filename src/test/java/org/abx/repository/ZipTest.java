@@ -46,11 +46,11 @@ public class ZipTest {
     @Test
     public void doTest() throws Exception {
         try {
-            String repositoryName = "ziprepo";
+            String repoName = "ziprepo";
             String token = JWTUtils.generateToken("dummy", privateKey, 60,
                     List.of("Repository"));
 
-            ServiceRequest req = servicesClient.post("repository", "/repository/update/"+repositoryName);
+            ServiceRequest req = servicesClient.post("repository", "/repository/update/"+repoName);
             req.jwt(token);
             req.addPart("engine", "git");
             req.addPart("url", "https://github.com/AB-X-Framework/git-editRepo.git");
@@ -67,7 +67,7 @@ public class ZipTest {
                 resp = servicesClient.process(req);
                 JSONObject jsonObject = resp.asJSONObject();
                 System.out.println(jsonObject.toString());
-                status = jsonObject.getJSONObject(repositoryName).getString("status");
+                status = jsonObject.getJSONObject(repoName).getString("status");
                 if (status.startsWith(WorkingSince)) {
                     working = true;
                     break;
@@ -79,7 +79,7 @@ public class ZipTest {
 
             req = servicesClient.post("repository", "/repository/zip");
             req.jwt(token);
-            req.addPart("path", "/" + repositoryName + "/zip");
+            req.addPart("path", "/" + repoName + "/zip");
             resp = servicesClient.process(req);
             extractZipToFolder(resp.asStream(), "zipFolder");
             Assertions.assertEquals("top", StreamUtils.readStream(

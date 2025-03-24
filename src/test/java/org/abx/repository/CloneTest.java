@@ -42,7 +42,7 @@ public class CloneTest {
 
     @Test
     public void doTest() throws Exception {
-        String repositoryName = "repo";
+        String repoName = "repo";
         String token = JWTUtils.generateToken("dummy", privateKey, 60,
                 List.of("Repository"));
 
@@ -59,7 +59,7 @@ public class CloneTest {
         JSONArray jsonArray = resp.asJSONArray();
         Assertions.assertTrue(jsonArray.isEmpty());
 
-        req = servicesClient.post("repository", "/repository/update/"+repositoryName);
+        req = servicesClient.post("repository", "/repository/update/"+repoName);
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("url", "https://github.com/AB-X-Framework/git-simplerepo.git");
@@ -104,14 +104,14 @@ public class CloneTest {
         System.out.println(resp.asJSONArray());
 
         String filename = "README.md";
-        String path = "/" + repositoryName + "/" + filename;
+        String path = "/" + repoName + "/" + filename;
         req = servicesClient.get("repository", "/repository/data?path=" +
                 path);
         req.jwt(token);
         resp = servicesClient.process(req);
         Assertions.assertEquals("simplerepo", resp.asString().trim());
 
-        req = servicesClient.post("repository", "/repository/update/"+repositoryName);
+        req = servicesClient.post("repository", "/repository/update/"+repoName);
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("url", "https://github.com/AB-X-Framework/simplerepo.git");
@@ -163,7 +163,7 @@ public class CloneTest {
         }
         Assertions.assertTrue(found);
 
-        req = servicesClient.post("repository", "/repository/rollback/"+repositoryName);
+        req = servicesClient.post("repository", "/repository/rollback/"+repoName);
         req.jwt(token);
         req.addPart("files", new JSONArray().put(filename).toString());
         resp = servicesClient.process(req);
@@ -184,7 +184,7 @@ public class CloneTest {
         Assertions.assertTrue(zero);
 
 
-        req = servicesClient.post("repository", "/repository/update/"+repositoryName);
+        req = servicesClient.post("repository", "/repository/update/"+repoName);
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("url", "https://github.com/AB-X-Framework/git-superrepo.git");

@@ -39,7 +39,7 @@ public class PublicRepositoryTest {
 
     @Test
     public void doBasicTest() throws Exception {
-        String repositoryName = "repo";
+        String repoName = "repo";
         String token = JWTUtils.generateToken("dummy", privateKey, 60,
                 List.of("Repository"));
 

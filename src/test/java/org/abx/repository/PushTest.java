@@ -42,11 +42,11 @@ public class PushTest {
 
     @Test
     public void doTest() throws Exception {
-        String repositoryName = "repo2";
+        String repoName = "repo2";
         String token = JWTUtils.generateToken("dummy", privateKey, 60,
                 List.of("Repository"));
 
-        ServiceRequest req = servicesClient.post("repository", "/repository/update/"+repositoryName);
+        ServiceRequest req = servicesClient.post("repository", "/repository/update/"+repoName);
         req.jwt(token);
         req.addPart("engine", "git");
         req.addPart("url", "git@github.com:AB-X-Framework/git-editRepo.git");
@@ -64,7 +64,7 @@ public class PushTest {
             resp = servicesClient.process(req);
             JSONObject jsonObject = resp.asJSONObject();
             System.out.println(jsonObject.toString());
-            status = jsonObject.getJSONObject(repositoryName).getString("status");
+            status = jsonObject.getJSONObject(repoName).getString("status");
             if (status.startsWith(WorkingSince)) {
                 working = true;
                 break;
@@ -74,7 +74,7 @@ public class PushTest {
         Assertions.assertTrue(working, status);
 
         String filename = "README.md";
-        String path = "/"+repositoryName + "/" + filename;
+        String path = "/"+repoName + "/" + filename;
         req = servicesClient.post("repository", "/repository/upload");
         req.jwt(token);
         String newData = "HELLO " + Math.random();
@@ -84,7 +84,7 @@ public class PushTest {
         Assertions.assertTrue(resp.asBoolean());
         boolean found = false;
         for (int i = 0; i < 10; ++i) {
-            req = servicesClient.get("repository", "/repository/diff/"+repositoryName);
+            req = servicesClient.get("repository", "/repository/diff/"+repoName);
             req.jwt(token);
             resp = servicesClient.process(req);
             JSONArray jsonArray = resp.asJSONArray();
@@ -99,7 +99,7 @@ public class PushTest {
         }
         Assertions.assertTrue(found);
 
-        req = servicesClient.post("repository", "/repository/push/"+repositoryName);
+        req = servicesClient.post("repository", "/repository/push/"+repoName);
         req.jwt(token);
         req.addPart("pushMessage", "This is a push message");
         req.addPart("files", new JSONArray().put(filename).toString());
@@ -108,7 +108,7 @@ public class PushTest {
         Assertions.assertTrue(resp.asBoolean());
         boolean zero = false;
         for (int i = 0; i < 10; ++i) {
-            req = servicesClient.get("repository", "/repository/diff/"+repositoryName);
+            req = servicesClient.get("repository", "/repository/diff/"+repoName);
             req.jwt(token);
             resp = servicesClient.process(req);
             JSONArray jsonArray = resp.asJSONArray();

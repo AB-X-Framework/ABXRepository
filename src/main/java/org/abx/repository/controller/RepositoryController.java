@@ -63,9 +63,9 @@ public class RepositoryController {
     }
 
     @Secured("Repository")
-    @RequestMapping(value = "/update/{repositoryName}")
+    @RequestMapping(value = "/update/{repoName}")
     public boolean update(HttpServletRequest request,
-                          @PathVariable String repositoryName,
+                          @PathVariable String repoName,
                           @RequestParam String engine,
                           @RequestParam String url,
                           @RequestParam String branch,
@@ -73,7 +73,7 @@ public class RepositoryController {
         String username = request.getUserPrincipal().getName();
         RepoConfig repoConfig = new RepoConfig();
         repoConfig.lastKnownStatus = Initializing;
-        repoConfig.repositoryName = repositoryName;
+        repoConfig.repoName = repoName;
         repoConfig.url = url;
         repoConfig.user = username;
         repoConfig.branch = branch;
@@ -86,8 +86,8 @@ public class RepositoryController {
             configHolder.put(username, new UserRepoConfig());
         }
         UserRepoConfig config = configHolder.get(username);
-        if (config.containsKey(repositoryName)) {
-            RepoConfig rConfig = config.get(repositoryName);
+        if (config.containsKey(repoName)) {
+            RepoConfig rConfig = config.get(repoName);
             if (!rConfig.valid) {
                 return false;
             }
@@ -95,7 +95,7 @@ public class RepositoryController {
             rConfig.updatedConfig = repoConfig;
             reqs.add(new RepoReq("replace", rConfig));
         } else {
-            config.put(repositoryName, repoConfig);
+            config.put(repoName, repoConfig);
             reqs.add(new RepoReq("reset", repoConfig));
         }
         semaphore.release();
@@ -112,7 +112,7 @@ public class RepositoryController {
             return result;
         }
         for (RepoConfig config : userConfig.values()) {
-            result.put(config.repositoryName, Map.of("status", config.lastKnownStatus,
+            result.put(config.repoName, Map.of("status", config.lastKnownStatus,
                     "branch", config.branch));
         }
         return result;
@@ -179,11 +179,11 @@ public class RepositoryController {
         } else {
             RepositoryFile repoFile = files.get(Integer.parseInt(id));
             //Path not valid
-            if (!configHolder.get(username).containsKey(repoFile.repositoryName)) {
+            if (!configHolder.get(username).containsKey(repoFile.repoName)) {
                 return "[]";
             }
             String path = repoFile.path;
-            return getData(username, repoFile.repositoryName, new File(workingFolder, path), path, true).getJSONArray("children").toString(0);
+            return getData(username, repoFile.repoName, new File(workingFolder, path), path, true).getJSONArray("children").toString(0);
         }
     }
 
@@ -233,23 +233,23 @@ public class RepositoryController {
      *
      *
      * @param req        the auth request
-     * @param repositoryName the repository name
+     * @param repoName the repository name
      * @return the last know diff
      */
     @Secured("Repository")
-    @GetMapping(path = "/diff/{repositoryName}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/diff/{repoName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> diff(HttpServletRequest req,
-                             @PathVariable String repositoryName) {
+                             @PathVariable String repoName) {
         return configHolder.get(req.getUserPrincipal().
-                getName()).get(repositoryName).diff;
+                getName()).get(repoName).diff;
     }
 
     @Secured("Repository")
-    @GetMapping(path = "/remove/{repositoryName}")
+    @GetMapping(path = "/remove/{repoName}")
     public boolean remove(HttpServletRequest req,
-                          @PathVariable String repositoryName) {
+                          @PathVariable String repoName) {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
-                getName()).get(repositoryName);
+                getName()).get(repoName);
         repoConfig.lastKnownStatus = "Deleting";
         repoConfig.valid = false;
         reqs.add(new RepoReq("remove", repoConfig));
@@ -261,19 +261,19 @@ public class RepositoryController {
      * Disposes file
      *
      * @param username
-     * @param repositoryName
+     * @param repoName
      */
-    protected void dispose(String username, String repositoryName) {
-        configHolder.get(username).remove(repositoryName);
+    protected void dispose(String username, String repoName) {
+        configHolder.get(username).remove(repoName);
     }
 
     @Secured("Repository")
-    @RequestMapping(path = "/rollback/{repositoryName}")
+    @RequestMapping(path = "/rollback/{repoName}")
     public boolean rollback(HttpServletRequest req,
-                            @PathVariable String repositoryName,
+                            @PathVariable String repoName,
                             @RequestParam String files) throws Exception {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
-                getName()).get(repositoryName);
+                getName()).get(repoName);
         repoConfig.lastKnownStatus = "Rolling back";
         reqs.add(new RepoReq("rollback", repoConfig, files));
         semaphore.release();
@@ -281,13 +281,13 @@ public class RepositoryController {
     }
 
     @Secured("Repository")
-    @RequestMapping(path = "/push/{repositoryName}")
+    @RequestMapping(path = "/push/{repoName}")
     public boolean push(HttpServletRequest req,
-                        @PathVariable String repositoryName,
+                        @PathVariable String repoName,
                         @RequestParam String pushMessage,
                         @RequestParam String files) throws Exception {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
-                getName()).get(repositoryName);
+                getName()).get(repoName);
         repoConfig.lastKnownStatus = "Pushing";
         RepoReq repoReq = new RepoReq("push", repoConfig, files);
         repoReq.pushMessage = pushMessage;
