@@ -74,9 +74,9 @@ public class RepositoryProcessor extends Thread {
                 config.lastKnownStatus = engine.diff(config);
                 break;
             case "remove":
-                File root = new File(dir + "/" + config.user + "/" + config.name);
+                File root = new File(dir + "/" + config.user + "/" + config.repositoryName);
                 if (RepositoryEngine.deleteFolder(root)) {
-                    controller.dispose(config.user, config.name);
+                    controller.dispose(config.user, config.repositoryName);
                 } else {
                     config.lastKnownStatus = "Cannot delete repository.";
                 }

@@ -1,20 +1,8 @@
 package org.abx.repository.engine;
 
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
 import org.abx.repository.model.RepoConfig;
-import org.eclipse.jgit.api.*;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.transport.*;
-import org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig;
-import org.eclipse.jgit.util.FS;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class LocalRepositoryEngine implements RepositoryEngine {
@@ -43,7 +31,7 @@ public class LocalRepositoryEngine implements RepositoryEngine {
      */
     @Override
     public String reset(RepoConfig config) {
-        File root = new File(dir + "/" + config.user + "/" + config.name);
+        File root = new File(dir + "/" + config.user + "/" + config.repositoryName);
         if (!root.exists()) {
             root.mkdirs();
         }

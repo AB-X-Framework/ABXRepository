@@ -59,10 +59,9 @@ public class LocalRepoTest {
         JSONArray jsonArray = resp.asJSONArray();
         Assertions.assertTrue(jsonArray.isEmpty());
 
-        req = servicesClient.post("repository", "/repository/update");
+        req = servicesClient.post("repository", "/repository/update/"+repositoryName);
         req.jwt(token);
         req.addPart("engine", "local");
-        req.addPart("name", repositoryName);
         req.addPart("url", "");
         req.addPart("creds", "{}");
         req.addPart("branch", "");

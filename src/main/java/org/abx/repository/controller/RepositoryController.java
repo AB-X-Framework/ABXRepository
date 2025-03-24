@@ -63,17 +63,17 @@ public class RepositoryController {
     }
 
     @Secured("Repository")
-    @RequestMapping(value = "/update")
+    @RequestMapping(value = "/update/{repositoryName}")
     public boolean update(HttpServletRequest request,
+                          @PathVariable String repositoryName,
                           @RequestParam String engine,
-                          @RequestParam String name,
                           @RequestParam String url,
                           @RequestParam String branch,
                           @RequestParam String creds) throws ServletException, IOException {
         String username = request.getUserPrincipal().getName();
         RepoConfig repoConfig = new RepoConfig();
         repoConfig.lastKnownStatus = Initializing;
-        repoConfig.name = name;
+        repoConfig.repositoryName = repositoryName;
         repoConfig.url = url;
         repoConfig.user = username;
         repoConfig.branch = branch;
@@ -86,8 +86,8 @@ public class RepositoryController {
             configHolder.put(username, new UserRepoConfig());
         }
         UserRepoConfig config = configHolder.get(username);
-        if (config.containsKey(name)) {
-            RepoConfig rConfig = config.get(name);
+        if (config.containsKey(repositoryName)) {
+            RepoConfig rConfig = config.get(repositoryName);
             if (!rConfig.valid) {
                 return false;
             }
@@ -95,7 +95,7 @@ public class RepositoryController {
             rConfig.updatedConfig = repoConfig;
             reqs.add(new RepoReq("replace", rConfig));
         } else {
-            config.put(name, repoConfig);
+            config.put(repositoryName, repoConfig);
             reqs.add(new RepoReq("reset", repoConfig));
         }
         semaphore.release();
@@ -112,7 +112,7 @@ public class RepositoryController {
             return result;
         }
         for (RepoConfig config : userConfig.values()) {
-            result.put(config.name, Map.of("status", config.lastKnownStatus,
+            result.put(config.repositoryName, Map.of("status", config.lastKnownStatus,
                     "branch", config.branch));
         }
         return result;

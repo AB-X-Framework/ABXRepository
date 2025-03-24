@@ -59,10 +59,9 @@ public class CloneTest {
         JSONArray jsonArray = resp.asJSONArray();
         Assertions.assertTrue(jsonArray.isEmpty());
 
-        req = servicesClient.post("repository", "/repository/update");
+        req = servicesClient.post("repository", "/repository/update/"+repositoryName);
         req.jwt(token);
         req.addPart("engine", "git");
-        req.addPart("name", repositoryName);
         req.addPart("url", "https://github.com/AB-X-Framework/git-simplerepo.git");
         req.addPart("creds", "{}");
         req.addPart("branch", "");
@@ -112,10 +111,9 @@ public class CloneTest {
         resp = servicesClient.process(req);
         Assertions.assertEquals("simplerepo", resp.asString().trim());
 
-        req = servicesClient.post("repository", "/repository/update");
+        req = servicesClient.post("repository", "/repository/update/"+repositoryName);
         req.jwt(token);
         req.addPart("engine", "git");
-        req.addPart("name", repositoryName);
         req.addPart("url", "https://github.com/AB-X-Framework/simplerepo.git");
         req.addPart("branch", "super");
         req.addPart("creds", "{}");
@@ -187,10 +185,9 @@ public class CloneTest {
         Assertions.assertTrue(zero);
 
 
-        req = servicesClient.post("repository", "/repository/update");
+        req = servicesClient.post("repository", "/repository/update/"+repositoryName);
         req.jwt(token);
         req.addPart("engine", "git");
-        req.addPart("name", repositoryName);
         req.addPart("url", "https://github.com/AB-X-Framework/git-superrepo.git");
         req.addPart("creds", "{}");
         req.addPart("branch", "");

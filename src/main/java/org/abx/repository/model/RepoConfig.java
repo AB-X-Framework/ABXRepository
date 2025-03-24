@@ -4,7 +4,7 @@ import java.util.*;
 
 public class RepoConfig {
     public String user;
-    public String name;
+    public String repositoryName;
     public String engine;
     public String url;
 

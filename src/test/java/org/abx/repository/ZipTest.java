@@ -50,10 +50,9 @@ public class ZipTest {
             String token = JWTUtils.generateToken("dummy", privateKey, 60,
                     List.of("Repository"));
 
-            ServiceRequest req = servicesClient.post("repository", "/repository/update");
+            ServiceRequest req = servicesClient.post("repository", "/repository/update/"+repositoryName);
             req.jwt(token);
             req.addPart("engine", "git");
-            req.addPart("name", repositoryName);
             req.addPart("url", "https://github.com/AB-X-Framework/git-editRepo.git");
             req.addPart("branch", "");
             req.addPart("creds", "{}");

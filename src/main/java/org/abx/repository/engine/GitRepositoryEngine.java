@@ -33,7 +33,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     @Override
     public String pull(RepoConfig config) {
-        File root = new File(dir + "/" + config.user + "/" + config.name);
+        File root = new File(dir + "/" + config.user + "/" + config.repositoryName);
         try (Git git = Git.open(root)) {
             PullCommand pullCommand = git.pull();
             pullCommand.setRemote("origin").setRemoteBranchName(getCurrentBranch(git));
@@ -54,7 +54,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
     @Override
     public String reset(RepoConfig config) {
         // Create the clone command
-        File root = new File(dir + "/" + config.user + "/" + config.name);
+        File root = new File(dir + "/" + config.user + "/" + config.repositoryName);
         if (!root.exists()) {
             root.mkdirs();
             return clone(config);
@@ -104,7 +104,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     @Override
     public String push(RepoConfig config, List<String> files, String pushMessage) {
-        File root = new File(dir + "/" + config.user + "/" + config.name);
+        File root = new File(dir + "/" + config.user + "/" + config.repositoryName);
         try (Git git = Git.open(root)) {
             // Checkout the file to revert it to its state in HEAD
             AddCommand addCommand = git.add();
@@ -127,7 +127,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     @Override
     public String rollbackFile(RepoConfig config, List<String> files) {
-        File root = new File(dir + "/" + config.user + "/" + config.name);
+        File root = new File(dir + "/" + config.user + "/" + config.repositoryName);
         try (Git git = Git.open(root)) {
             // Checkout the file to revert it to its state in HEAD
             CheckoutCommand checkoutCommand = git.checkout();
@@ -144,7 +144,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     @Override
     public String diff(RepoConfig config) {
-        File root = new File(dir + "/" + config.user + "/" + config.name);
+        File root = new File(dir + "/" + config.user + "/" + config.repositoryName);
         try (Git git = Git.open(root)) {
             // Get the DiffCommand instance to compute differences
             DiffCommand diffCommand = git.diff();
@@ -189,7 +189,7 @@ public class GitRepositoryEngine implements RepositoryEngine {
 
     private String clone(RepoConfig config) {
         try {
-            CloneCommand cloneCommand = Git.cloneRepository().setURI(config.url).setRemote("origin").setDirectory(new File(dir + "/" + config.user + "/" + config.name));
+            CloneCommand cloneCommand = Git.cloneRepository().setURI(config.url).setRemote("origin").setDirectory(new File(dir + "/" + config.user + "/" + config.repositoryName));
             setCreds(cloneCommand, config);
             if (!config.branch.isEmpty()) {
                 cloneCommand.setBranch(config.branch);
