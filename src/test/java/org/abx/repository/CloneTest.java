@@ -148,7 +148,7 @@ public class CloneTest {
         Assertions.assertTrue(resp.asBoolean());
         found = false;
         for (int i = 0; i < 10; ++i) {
-            req = servicesClient.get("repository", "/repository/diff?repository=repo");
+            req = servicesClient.get("repository", "/repository/diff/repo");
             req.jwt(token);
             resp = servicesClient.process(req);
             jsonArray = resp.asJSONArray();
@@ -172,7 +172,7 @@ public class CloneTest {
         Assertions.assertTrue(resp.asBoolean());
         boolean zero = false;
         for (int i = 0; i < 10; ++i) {
-            req = servicesClient.get("repository", "/repository/diff?repository=repo");
+            req = servicesClient.get("repository", "/repository/diff/repo");
             req.jwt(token);
             resp = servicesClient.process(req);
             jsonArray = resp.asJSONArray();

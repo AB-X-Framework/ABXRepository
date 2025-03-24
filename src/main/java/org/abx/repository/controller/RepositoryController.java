@@ -233,17 +233,15 @@ public class RepositoryController {
      *
      *
      * @param req        the auth request
-     * @param repository the repository name
+     * @param repositoryName the repository name
      * @return the last know diff
-     * @throws Exception Not found
      */
     @Secured("Repository")
-    @GetMapping(path = "/diff", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/diff/{repositoryName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> diff(HttpServletRequest req,
-                             @RequestParam("repository") String repository) throws Exception {
+                             @PathVariable String repositoryName) {
         return configHolder.get(req.getUserPrincipal().
-                getName()).get(repository).diff;
-
+                getName()).get(repositoryName).diff;
     }
 
     @Secured("Repository")
