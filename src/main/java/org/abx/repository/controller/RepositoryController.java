@@ -245,7 +245,7 @@ public class RepositoryController {
     }
 
     @Secured("Repository")
-    @GetMapping(path = "/remove/{repoName}")
+    @DeleteMapping(path = "/remove/{repoName}")
     public boolean remove(HttpServletRequest req,
                           @PathVariable String repoName) {
         RepoConfig repoConfig = configHolder.get(req.getUserPrincipal().
