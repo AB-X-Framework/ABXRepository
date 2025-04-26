@@ -118,6 +118,15 @@ public class RepositoryController {
         return result;
     }
 
+    @Secured("Repository")
+    @RequestMapping(value = "/status/{repoName}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public  Map<String, String> repoStatus(HttpServletRequest request, @PathVariable String repoName) {
+        UserRepoConfig userConfig = configHolder.get(request.getUserPrincipal().getName());
+        RepoConfig config = userConfig.get(repoName);
+       return Map.of("status", config.lastKnownStatus,
+                "branch", config.branch);
+    }
+
     private JSONObject getData(String username, String repository, File file, String path, boolean inner) {
         JSONObject jsonObject = new JSONObject();
         String name = file.getName();
@@ -231,8 +240,7 @@ public class RepositoryController {
     /**
      * This requests last known diff, but actual diff gets trigger during load
      *
-     *
-     * @param req        the auth request
+     * @param req      the auth request
      * @param repoName the repository name
      * @return the last know diff
      */
@@ -300,7 +308,7 @@ public class RepositoryController {
     @Secured("Repository")
     @RequestMapping("/zip")
     public ResponseEntity<StreamingResponseBody> zip(HttpServletRequest req,
-                                                                   @RequestParam String path) {
+                                                     @RequestParam String path) {
         String username = req.getUserPrincipal().getName();
         String repository = path.substring(1, path.indexOf('/', 1));
         RepoConfig repoConfig = configHolder.get(username).get(repository);
@@ -310,7 +318,7 @@ public class RepositoryController {
                         outputStream.write("Invalid repository".getBytes());
                     });
         }
-        File folder = new File(dir+"/"+username+"/"+path);
+        File folder = new File(dir + "/" + username + "/" + path);
         if (!folder.exists()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(outputStream -> {
@@ -324,8 +332,8 @@ public class RepositoryController {
             }
         };
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""+
-                folder.getName()+".zip\"");
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" +
+                folder.getName() + ".zip\"");
         headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
         return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
     }
@@ -362,7 +370,7 @@ public class RepositoryController {
     @PostMapping(value = "/validate", produces = MediaType.APPLICATION_JSON_VALUE)
     public boolean validateCreds(
             @RequestParam String url, @RequestParam String branch,
-            @RequestParam String engine,   @RequestParam String creds) {
+            @RequestParam String engine, @RequestParam String creds) {
         RepoConfig repoConfig = new RepoConfig();
         repoConfig.lastKnownStatus = Initializing;
         repoConfig.url = url;
